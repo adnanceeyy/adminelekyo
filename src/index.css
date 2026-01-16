@@ -1,0 +1,29 @@
+/* Only this one import for Tailwind v4 */
+@import "tailwindcss";
+
+/* Google Fonts - Montserrat */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+
+/* Your custom styles / overrides go here ↓ */
+body {
+  font-family: "Montserrat", sans-serif;
+}
+
+/* Optional: If you want to use font-montserrat class in Tailwind */
+@layer base {
+  :root {
+    --font-montserrat: "Montserrat", sans-serif;
+  }
+}
+
+/* Hide scrollbar while keeping functionality */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge Chromium */
+  }
+}
