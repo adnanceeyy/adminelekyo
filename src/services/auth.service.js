@@ -8,6 +8,7 @@ const AuthService = {
     try {
       // Note: You'll need to add an admin login route in your backend
       // For now, using the regular user login
+      console.log("SENDING LOGIN:", { email, password });
       const response = await axios.post(
         `${API_CONFIG.BASE_URL}users/login`,
         { email, password }
