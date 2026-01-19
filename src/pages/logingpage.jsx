@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import AuthService from "../services/auth.service";
 import {
   IconMail,
   IconLock,
   IconArrowRight,
   IconShieldLock,
-  IconCpu
+  IconEye,
+  IconEyeOff
 } from "@tabler/icons-react";
 
 export default function LoginPage({ isDark = true }) {
@@ -13,32 +15,40 @@ export default function LoginPage({ isDark = true }) {
   const [password, setPassword] = useState("admin@123");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
-    // Artificial delay for cinematic feel
-    setTimeout(() => {
-      if (email === "admin@gmail.com" && password === "admin@123") {
-        navigate("/main");
+    try {
+      const response = await AuthService.login(email, password);
+
+      // STRICT ADMIN CHECK: Only allow users with role 'admin'
+      if (response && response.token) {
+        if (response.role === "admin") {
+          navigate("/main");
+        } else {
+          setError("ACCESS DENIED: ADMIN PRIVILEGES REQUIRED");
+          AuthService.logout(); // Clear token for security
+        }
       } else {
-        setError("AUTHENTICATION FAILURE: INVALID CREDENTIALS");
-        setIsLoading(false);
+        setError("AUTHENTICATION FAILURE: INVALID RESPONSE");
       }
-    }, 800);
+    } catch (err) {
+      setError(err.message || "AUTHENTICATION FAILURE: INVALID CREDENTIALS");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className={`min-h-screen flex items-center justify-center p-6 font-montserrat transition-colors duration-500 ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
-
-
       <div className="relative z-10 w-full max-w-[420px]">
         {/* Simple Brand Header */}
         <div className="text-center mb-10">
-
           <h1 className={`text-2xl font-bold tracking-tight mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>
             Eleckyo Admin
           </h1>
@@ -48,8 +58,7 @@ export default function LoginPage({ isDark = true }) {
         </div>
 
         {/* Clean Login Card */}
-        <div className={`rounded-[32px] p-8 md:p-10 shadow-2xl transition-all border ${isDark ? "bg-gray-900/50 border-gray-800 backdrop-blur-xl" : "bg-white border-gray-100"
-          }`}>
+        <div className={`rounded-[32px] p-8 md:p-10 shadow-2xl transition-all border ${isDark ? "bg-gray-900/50 border-gray-800 backdrop-blur-xl" : "bg-white border-gray-100"}`}>
           <form className="space-y-6" onSubmit={handleLogin}>
             <div className="space-y-5">
               <div className="space-y-2">
@@ -61,8 +70,7 @@ export default function LoginPage({ isDark = true }) {
                     placeholder="name@company.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className={`w-full rounded-2xl pl-12 pr-4 py-3.5 text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${isDark ? "bg-gray-800 border-gray-700 text-white placeholder-gray-600" : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"
-                      }`}
+                    className={`w-full rounded-2xl pl-12 pr-4 py-3.5 text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${isDark ? "bg-gray-800 border-gray-700 text-white placeholder-gray-600" : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"}`}
                   />
                 </div>
               </div>
@@ -75,13 +83,19 @@ export default function LoginPage({ isDark = true }) {
                 <div className="relative group">
                   <IconLock size={20} className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${isDark ? "text-gray-500 group-focus-within:text-blue-500" : "text-gray-400 group-focus-within:text-blue-600"}`} />
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={`w-full rounded-2xl pl-12 pr-4 py-3.5 text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${isDark ? "bg-gray-800 border-gray-700 text-white placeholder-gray-600" : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"
-                      }`}
+                    className={`w-full rounded-2xl pl-12 pr-12 py-3.5 text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${isDark ? "bg-gray-800 border-gray-700 text-white placeholder-gray-600" : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"}`}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors hover:text-blue-500 ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                  >
+                    {showPassword ? <IconEyeOff size={20} /> : <IconEye size={20} />}
+                  </button>
                 </div>
               </div>
             </div>

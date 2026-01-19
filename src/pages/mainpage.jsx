@@ -11,10 +11,29 @@ import Profile from "./profile";
 import Settings from "./settings";
 import Orders from "./orders";
 
+import { useNavigate } from "react-router-dom";
+
 export default function Mainpage() {
   const [isDark, setIsDark] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [currentPage, setCurrentPage] = useState("dashboard");
+  const [currentPage, setCurrentPage] = useState(() => {
+    // Load saved page from localStorage if it exists
+    return localStorage.getItem('adminCurrentPage') || "dashboard";
+  });
+  const navigate = useNavigate();
+
+  // Save current page to localStorage whenever it changes
+  React.useEffect(() => {
+    localStorage.setItem('adminCurrentPage', currentPage);
+  }, [currentPage]);
+
+  // Authentication Check
+  React.useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      navigate("/");
+    }
+  }, [navigate]);
 
   const toggleTheme = () => {
     setIsDark(!isDark);
@@ -26,6 +45,10 @@ export default function Mainpage() {
 
   const handleNavigate = (page) => {
     if (page === "logout") {
+      // Clear all admin data on logout
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminUser');
+      localStorage.removeItem('adminCurrentPage');
       window.location.href = "/";
     } else {
       setCurrentPage(page);

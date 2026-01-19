@@ -10,25 +10,58 @@ import {
     IconReceipt,
     IconEdit
 } from '@tabler/icons-react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import OrderService from '../services/order.service';
 
 export default function Orders({ isDark, onNavigate }) {
     const [searchTerm, setSearchTerm] = useState('');
-    const orders = [
-        { id: '#ORD-9421', customer: 'Sarah Johnson', email: 'sarah.j@example.com', amount: '$2,450.00', status: 'Completed', date: 'Jan 16, 2024', items: 3, tracking: 'TRK-990123' },
-        { id: '#ORD-9420', customer: 'Michael Chen', email: 'm.chen@example.com', amount: '$1,200.50', status: 'Processing', date: 'Jan 16, 2024', items: 1, tracking: 'Preparing' },
-        { id: '#ORD-9419', customer: 'Emma Wilson', email: 'emma.w@example.com', amount: '$850.00', status: 'Pending', date: 'Jan 15, 2024', items: 2, tracking: 'N/A' },
-        { id: '#ORD-9418', customer: 'James Robert', email: 'j.robert@example.com', amount: '$3,100.00', status: 'Completed', date: 'Jan 15, 2024', items: 5, tracking: 'TRK-990115' },
-        { id: '#ORD-9417', customer: 'Olivia Davis', email: 'olivia.d@example.com', amount: '$450.25', status: 'Failed', date: 'Jan 14, 2024', items: 1, tracking: 'Cancelled' },
-        { id: '#ORD-9416', customer: 'David Miller', email: 'd.miller@example.com', amount: '$1,890.00', status: 'Processing', date: 'Jan 14, 2024', items: 2, tracking: 'Pending Shipment' },
-    ];
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [activeFilter, setActiveFilter] = useState('All Orders');
+
+    useEffect(() => {
+        fetchOrders();
+    }, []);
+
+    const fetchOrders = async () => {
+        try {
+            setLoading(true);
+            const data = await OrderService.getAllOrders();
+            setOrders(data);
+        } catch (err) {
+            setError(err.message || 'Failed to fetch orders');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleUpdateStatus = async (orderId, newStatus) => {
+        try {
+            await OrderService.updateOrderStatus(orderId, newStatus);
+            setOrders(orders.map(o => o._id === orderId ? { ...o, status: newStatus } : o));
+        } catch (err) {
+            alert('Failed to update status: ' + err.message);
+        }
+    };
 
     const statusMap = {
         'Completed': { bg: 'bg-emerald-500/10', text: 'text-emerald-500', icon: IconCheck },
         'Processing': { bg: 'bg-blue-500/10', text: 'text-blue-500', icon: IconTruck },
         'Pending': { bg: 'bg-amber-500/10', text: 'text-amber-500', icon: IconReceipt },
         'Failed': { bg: 'bg-rose-500/10', text: 'text-rose-500', icon: IconCircleX },
+        'Shipped': { bg: 'bg-indigo-500/10', text: 'text-indigo-500', icon: IconTruck },
     };
+
+    const filteredOrders = orders.filter(order => {
+        const matchesSearch =
+            order._id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            order.customerDetails?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesFilter = activeFilter === 'All Orders' || order.status === activeFilter;
+
+        return matchesSearch && matchesFilter;
+    });
 
     return (
         <div className={`flex-1 flex flex-col h-full overflow-hidden ${isDark ? "bg-gray-950" : "bg-[#f8fafc]"}`}>
@@ -56,10 +89,13 @@ export default function Orders({ isDark, onNavigate }) {
                 {/* Quick Filters */}
                 <div className="flex flex-wrap items-center gap-3 mb-8">
                     {['All Orders', 'Processing', 'Pending', 'Completed', 'Failed'].map((filter, i) => (
-                        <button key={i} className={`px-5 py-2 rounded-xl text-sm font-bold transition-all ${i === 0
-                            ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
-                            : isDark ? "bg-gray-900 text-gray-400 hover:text-gray-200" : "bg-white text-gray-500 hover:text-gray-900 shadow-sm border border-gray-100"
-                            }`}>
+                        <button
+                            key={i}
+                            onClick={() => setActiveFilter(filter)}
+                            className={`px-5 py-2 rounded-xl text-sm font-bold transition-all ${activeFilter === filter
+                                ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                                : isDark ? "bg-gray-900 text-gray-400 hover:text-gray-200" : "bg-white text-gray-500 hover:text-gray-900 shadow-sm border border-gray-100"
+                                }`}>
                             {filter}
                         </button>
                     ))}
@@ -97,51 +133,71 @@ export default function Orders({ isDark, onNavigate }) {
                                 </tr>
                             </thead>
                             <tbody className={`divide-y ${isDark ? "divide-gray-800/50" : "divide-gray-100"}`}>
-                                {orders.map((order, i) => (
-                                    <tr key={i} className={`group transition-all duration-300 ${isDark ? "hover:bg-gray-800/40" : "hover:bg-gray-50/70"}`}>
-                                        <td className="px-8 py-7">
-                                            <span className={`text-xs font-mono font-bold ${isDark ? "text-gray-500" : "text-gray-400"}`}>{order.id}</span>
-                                        </td>
-                                        <td className="px-8 py-7">
-                                            <div className="flex items-center gap-4">
-                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold ${isDark ? "bg-gray-800 text-blue-400" : "bg-blue-50 text-blue-600"}`}>
-                                                    {order.customer.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <p className={`text-sm font-bold ${isDark ? "text-gray-200" : "text-gray-900"}`}>{order.customer}</p>
-                                                    <p className={`text-[11px] font-medium ${isDark ? "text-gray-500" : "text-gray-400"}`}>{order.email}</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-7 text-sm font-medium">
-                                            <span className={isDark ? "text-gray-400" : "text-gray-600"}>{order.date}</span>
-                                        </td>
-                                        <td className="px-8 py-7">
-                                            <div className="flex flex-col">
-                                                <span className={`text-xs font-bold ${isDark ? "text-blue-400" : "text-blue-600"}`}>{order.tracking}</span>
-                                                <span className={`text-[10px] font-medium ${isDark ? "text-gray-500" : "text-gray-400"}`}>{order.items} Units</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-7">
-                                            <span className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{order.amount}</span>
-                                        </td>
-                                        <td className="px-8 py-7">
-                                            <div className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold ${statusMap[order.status]?.bg} ${statusMap[order.status]?.text}`}>
-                                                {order.status}
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-7 text-center">
-                                            <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button className={`p-2 rounded-xl transition-all ${isDark ? "bg-gray-800 text-gray-400 hover:text-white" : "bg-gray-100 text-gray-400 hover:text-gray-900"}`}>
-                                                    <IconEye size={18} />
-                                                </button>
-                                                <button className={`p-2 rounded-xl transition-all ${isDark ? "bg-gray-800 text-gray-400 hover:text-white" : "bg-gray-100 text-gray-400 hover:text-gray-900"}`}>
-                                                    <IconTruck size={18} />
-                                                </button>
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan="7" className="py-20 text-center">
+                                            <div className="flex flex-col items-center gap-3">
+                                                <div className="w-10 h-10 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
+                                                <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">Loading Orders...</p>
                                             </div>
                                         </td>
                                     </tr>
-                                ))}
+                                ) : filteredOrders.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="7" className="py-20 text-center text-gray-500 font-bold uppercase tracking-widest">No Orders Found</td>
+                                    </tr>
+                                ) : (
+                                    filteredOrders.map((order, i) => (
+                                        <tr key={order._id || i} className={`group transition-all duration-300 ${isDark ? "hover:bg-gray-800/40" : "hover:bg-gray-50/70"}`}>
+                                            <td className="px-8 py-7">
+                                                <span className={`text-xs font-mono font-bold ${isDark ? "text-gray-500" : "text-gray-400"}`}>#{order._id?.substring(0, 10).toUpperCase()}</span>
+                                            </td>
+                                            <td className="px-8 py-7">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold ${isDark ? "bg-gray-800 text-blue-400" : "bg-blue-50 text-blue-600"}`}>
+                                                        {order.customerDetails?.name?.charAt(0) || 'U'}
+                                                    </div>
+                                                    <div>
+                                                        <p className={`text-sm font-bold ${isDark ? "text-gray-200" : "text-gray-900"}`}>{order.customerDetails?.name || 'Unknown'}</p>
+                                                        <p className={`text-[11px] font-medium ${isDark ? "text-gray-500" : "text-gray-400"}`}>{order.customerDetails?.email}</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-7 text-sm font-medium">
+                                                <span className={isDark ? "text-gray-400" : "text-gray-600"}>{new Date(order.createdAt).toLocaleDateString()}</span>
+                                            </td>
+                                            <td className="px-8 py-7">
+                                                <div className="flex flex-col">
+                                                    <span className={`text-xs font-bold ${isDark ? "text-blue-400" : "text-blue-600"}`}>{order.paymentSummary?.method || 'Direct'}</span>
+                                                    <span className={`text-[10px] font-medium ${isDark ? "text-gray-500" : "text-gray-400"}`}>{order.orderedItems?.length || 0} Items</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-7">
+                                                <span className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>₹{order.paymentSummary?.totalAmount?.toLocaleString()}</span>
+                                            </td>
+                                            <td className="px-8 py-7">
+                                                <div className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold ${statusMap[order.status]?.bg || 'bg-gray-500/10'} ${statusMap[order.status]?.text || 'text-gray-500'}`}>
+                                                    {order.status || 'Pending'}
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-7 text-center">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <select
+                                                        className={`text-[10px] font-bold py-1 px-2 rounded-lg border focus:outline-none ${isDark ? "bg-gray-800 border-gray-700 text-gray-300" : "bg-white border-gray-200 text-gray-700"}`}
+                                                        value={order.status || 'Pending'}
+                                                        onChange={(e) => handleUpdateStatus(order._id, e.target.value)}
+                                                    >
+                                                        <option value="Pending">Pending</option>
+                                                        <option value="Processing">Processing</option>
+                                                        <option value="Shipped">Shipped</option>
+                                                        <option value="Completed">Completed</option>
+                                                        <option value="Failed">Failed</option>
+                                                    </select>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>

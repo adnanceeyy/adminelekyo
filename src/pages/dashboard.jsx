@@ -8,6 +8,10 @@ import {
   IconFilter,
   IconDotsVertical
 } from '@tabler/icons-react';
+import { useState, useEffect } from 'react';
+import ProductService from '../services/product.service';
+import UserService from '../services/user.service';
+import OrderService from '../services/order.service';
 
 function StatCard({ title, value, change, isPositive, icon: Icon, color, isDark }) {
   return (
@@ -67,25 +71,50 @@ function ActivityItem({ activity, user, time, type, isDark = true }) {
 }
 
 export default function Dashboard({ isDark, onNavigate }) {
-  const stats = [
-    { title: "Revenue", value: "₹1,28,430", change: "12.5%", isPositive: true, icon: IconTrendingUp, color: "blue" },
-    { title: "Orders", value: "2,420", change: "8.2%", isPositive: true, icon: IconShoppingCart, color: "emerald" },
-    { title: "Customers", value: "12,105", change: "5.1%", isPositive: true, icon: IconUsers, color: "purple" },
-    { title: "Pending", value: "142", change: "2.3%", isPositive: false, icon: IconClock, color: "orange" },
-  ];
+  const [stats, setStats] = useState([
+    { title: "Revenue", value: "₹0", change: "+0%", isPositive: true, icon: IconTrendingUp, color: "blue" },
+    { title: "Orders", value: "0", change: "+0%", isPositive: true, icon: IconShoppingCart, color: "emerald" },
+    { title: "Customers", value: "0", change: "+0%", isPositive: true, icon: IconUsers, color: "purple" },
+    { title: "Pending", value: "0", change: "0%", isPositive: false, icon: IconClock, color: "orange" },
+  ]);
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [products, users, orders] = await Promise.all([
+        ProductService.getAllProducts(),
+        UserService.getAllUsers(),
+        OrderService.getAllOrders()
+      ]);
+
+      // Calculate Stats
+      const totalRevenue = orders.reduce((sum, order) => sum + (order.paymentSummary?.totalAmount || 0), 0);
+      const pendingOrders = orders.filter(o => o.status === 'Pending' || o.status === 'Processing').length;
+
+      setStats([
+        { title: "Revenue", value: `₹${totalRevenue.toLocaleString()}`, change: "Live", isPositive: true, icon: IconTrendingUp, color: "blue" },
+        { title: "Orders", value: orders.length.toString(), change: "Live", isPositive: true, icon: IconShoppingCart, color: "emerald" },
+        { title: "Customers", value: users.length.toString(), change: "Live", isPositive: true, icon: IconUsers, color: "purple" },
+        { title: "Pending", value: pendingOrders.toString(), change: "Action required", isPositive: pendingOrders > 0, icon: IconClock, color: "orange" },
+      ]);
+
+      setRecentOrders(orders.slice(0, 5));
+    } catch (err) {
+      console.error('Dashboard Data Error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const recentActivities = [
-    { activity: 'Order #9241 completed', user: 'System', time: '2 mins ago', type: 'order' },
-    { activity: 'New customer registration', user: 'Alex Rivera', time: '15 mins ago', type: 'customer' },
-    { activity: 'Stock level alert: Boat Rockerz', user: 'Warehouse', time: '1 hour ago', type: 'alert' },
-    { activity: 'Refund processed #8102', user: 'Admin', time: '3 hours ago', type: 'order' },
-  ];
-
-  const recentOrders = [
-    { id: '#ORD-9421', customer: 'Sarah Johnson', email: 'sarah.j@example.com', amount: '₹2,450.00', status: 'Completed' },
-    { id: '#ORD-9420', customer: 'Michael Chen', email: 'm.chen@example.com', amount: '₹1,200.50', status: 'Processing' },
-    { id: '#ORD-9419', customer: 'Emma Wilson', email: 'emma.w@example.com', amount: '₹850.00', status: 'Pending' },
-    { id: '#ORD-9418', customer: 'James Robert', email: 'j.robert@example.com', amount: '₹3,100.00', status: 'Completed' },
+    { activity: 'System Sync Completed', user: 'System', time: 'Just now', type: 'order' },
+    { activity: 'Database Connected', user: 'Admin', time: 'Online', type: 'customer' },
   ];
 
   const statusMap = {
@@ -129,21 +158,27 @@ export default function Dashboard({ isDark, onNavigate }) {
                     </tr>
                   </thead>
                   <tbody className={`divide-y ${isDark ? "divide-gray-800" : "divide-gray-100"}`}>
-                    {recentOrders.map((order, i) => (
-                      <tr key={i} className={`group transition-all duration-300 ${isDark ? "hover:bg-gray-800/40" : "hover:bg-gray-50/70"}`}>
-                        <td className="px-6 py-4"><span className={`text-sm font-bold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{order.id}</span></td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col">
-                            <span className={`text-sm font-bold ${isDark ? "text-gray-200" : "text-gray-800"}`}>{order.customer}</span>
-                            <span className="text-[11px] text-gray-500">{order.email}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold ${statusMap[order.status]?.bg} ${statusMap[order.status]?.text}`}>{order.status}</span>
-                        </td>
-                        <td className="px-6 py-4 text-right"><span className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{order.amount}</span></td>
-                      </tr>
-                    ))}
+                    {loading ? (
+                      <tr><td colSpan="4" className="py-10 text-center text-xs font-bold text-gray-500 uppercase">Updating live stream...</td></tr>
+                    ) : recentOrders.length === 0 ? (
+                      <tr><td colSpan="4" className="py-10 text-center text-xs font-bold text-gray-500 uppercase">No recent transactions</td></tr>
+                    ) : (
+                      recentOrders.map((order, i) => (
+                        <tr key={order._id || i} className={`group transition-all duration-300 ${isDark ? "hover:bg-gray-800/40" : "hover:bg-gray-50/70"}`}>
+                          <td className="px-6 py-4"><span className={`text-sm font-bold ${isDark ? "text-gray-300" : "text-gray-700"}`}>#{order._id?.substring(0, 10).toUpperCase()}</span></td>
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col">
+                              <span className={`text-sm font-bold ${isDark ? "text-gray-200" : "text-gray-800"}`}>{order.customerDetails?.name || 'Customer'}</span>
+                              <span className="text-[11px] text-gray-500">{order.customerDetails?.email}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold ${statusMap[order.status]?.bg || 'bg-gray-500/10'} ${statusMap[order.status]?.text || 'text-gray-500'}`}>{order.status || 'Pending'}</span>
+                          </td>
+                          <td className="px-6 py-4 text-right"><span className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>₹{order.paymentSummary?.totalAmount?.toLocaleString()}</span></td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
