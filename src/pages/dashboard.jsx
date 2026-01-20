@@ -9,6 +9,9 @@ import {
   IconDotsVertical
 } from '@tabler/icons-react';
 import { useState, useEffect } from 'react';
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+} from 'recharts';
 import ProductService from '../services/product.service';
 import UserService from '../services/user.service';
 import OrderService from '../services/order.service';
@@ -78,6 +81,7 @@ export default function Dashboard({ isDark, onNavigate }) {
     { title: "Pending", value: "0", change: "0%", isPositive: false, icon: IconClock, color: "orange" },
   ]);
   const [recentOrders, setRecentOrders] = useState([]);
+  const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -104,6 +108,25 @@ export default function Dashboard({ isDark, onNavigate }) {
         { title: "Pending", value: pendingOrders.toString(), change: "Action required", isPositive: pendingOrders > 0, icon: IconClock, color: "orange" },
       ]);
 
+      // Process Chart Data (Last 7 Days)
+      const last7Days = [...Array(7)].map((_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        return d.toISOString().split('T')[0];
+      }).reverse();
+
+      const dailyRevenue = last7Days.map(date => {
+        const dayTotal = orders
+          .filter(o => o.createdAt && o.createdAt.split('T')[0] === date)
+          .reduce((sum, o) => sum + (o.paymentSummary?.totalAmount || 0), 0);
+
+        return {
+          name: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
+          revenue: dayTotal
+        };
+      });
+
+      setChartData(dailyRevenue);
       setRecentOrders(orders.slice(0, 5));
     } catch (err) {
       console.error('Dashboard Data Error:', err);
@@ -138,6 +161,65 @@ export default function Dashboard({ isDark, onNavigate }) {
           {stats.map((stat, i) => (
             <StatCard key={i} {...stat} isDark={isDark} />
           ))}
+        </div>
+
+        {/* Sales Chart Section */}
+        <div className={`mb-8 p-6 rounded-[40px] border transition-all duration-500 ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h3 className={`text-xl font-black ${isDark ? "text-white" : "text-gray-900"}`}>Revenue Overview</h3>
+              <p className={`text-xs font-bold uppercase tracking-widest mt-1 ${isDark ? "text-gray-500" : "text-gray-400"}`}>Weekly performance metrics</p>
+            </div>
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl ${isDark ? "bg-gray-800 text-gray-300" : "bg-gray-50 text-gray-600"} text-xs font-bold`}>
+              <IconFilter size={14} />
+              Filter: 7 Days
+            </div>
+          </div>
+          <div className="h-[350px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? "#1f2937" : "#f1f5f9"} />
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: isDark ? '#4b5563' : '#94a3b8', fontSize: 12, fontWeight: 600 }}
+                  dy={10}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: isDark ? '#4b5563' : '#94a3b8', fontSize: 12, fontWeight: 600 }}
+                  tickFormatter={(value) => `₹${value >= 1000 ? (value / 1000).toFixed(1) + 'k' : value}`}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: isDark ? '#111827' : '#fff',
+                    border: 'none',
+                    borderRadius: '16px',
+                    boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+                    color: isDark ? '#fff' : '#000'
+                  }}
+                  itemStyle={{ color: '#3b82f6', fontWeight: 'bold' }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#3b82f6"
+                  strokeWidth={4}
+                  fillOpacity={1}
+                  fill="url(#colorRev)"
+                  animationDuration={1500}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

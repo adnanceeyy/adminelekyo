@@ -11,18 +11,72 @@ import {
   IconChevronDown,
   IconMail
 } from '@tabler/icons-react'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import NotificationService from '../services/notification.service';
+import { toast } from 'react-hot-toast';
 
 export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, onNavigate }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const notifications = [
-    { id: 1, message: "New order received #ORD-9421", time: "2 mins ago", type: "order", unread: true },
-    { id: 2, message: "Payment processed from Michael Chen", time: "1 hour ago", type: "payment", unread: true },
-    { id: 3, message: "Stock level alert for iPhone 15 Pro", time: "3 hours ago", type: "alert", unread: false },
-    { id: 4, message: "Alex Rivera registered a new account", time: "5 hours ago", type: "user", unread: false },
-  ];
+  useEffect(() => {
+    fetchNotifications(); // Initial fetch
+    const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (showNotifications) {
+      fetchNotifications();
+    }
+  }, [showNotifications]);
+
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const data = await NotificationService.getNotifications();
+      setNotifications(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMarkAsRead = async (id) => {
+    try {
+      await NotificationService.markAsRead(id);
+      setNotifications(prev => prev.map(n => n._id === id ? { ...n, unread: false } : n));
+    } catch (err) {
+      toast.error(err);
+    }
+  };
+
+  const handleClearAll = async () => {
+    try {
+      if (!confirm("Clear all notifications?")) return;
+      await NotificationService.clearAll();
+      setNotifications([]);
+      toast.success("Notifications cleared");
+    } catch (err) {
+      toast.error(err);
+    }
+  };
+
+  const unreadCount = notifications.filter(n => n.unread).length;
+
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000); // seconds
+
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return date.toLocaleDateString();
+  };
 
   return (
     <div
@@ -33,8 +87,8 @@ export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, o
         <button
           onClick={toggleSidebar}
           className={`p-2 rounded-xl transition-all duration-300 ${isDark
-              ? "hover:bg-gray-800 text-gray-400 hover:text-white"
-              : "hover:bg-gray-50 text-gray-500 hover:text-gray-900"
+            ? "hover:bg-gray-800 text-gray-400 hover:text-white"
+            : "hover:bg-gray-50 text-gray-500 hover:text-gray-900"
             }`}
         >
           {sidebarOpen ? <IconX size={22} stroke={2.5} /> : <IconMenu2 size={22} stroke={2.5} />}
@@ -52,8 +106,8 @@ export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, o
             type="search"
             placeholder="Search analytics, orders, or tools..."
             className={`w-full rounded-2xl pl-11 pr-4 py-2 text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${isDark
-                ? "bg-gray-900 border border-gray-800 text-gray-200 placeholder-gray-600 focus:bg-gray-800"
-                : "bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white"
+              ? "bg-gray-900 border border-gray-800 text-gray-200 placeholder-gray-600 focus:bg-gray-800"
+              : "bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white"
               }`}
           />
         </div>
@@ -64,8 +118,8 @@ export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, o
         <button
           onClick={toggleTheme}
           className={`p-2.5 rounded-xl transition-all duration-300 ${isDark
-              ? "hover:bg-gray-800 text-amber-400 hover:shadow-[0_0_15px_rgba(251,191,36,0.1)]"
-              : "hover:bg-gray-50 text-indigo-600 hover:shadow-[0_0_15px_rgba(79,70,229,0.1)]"
+            ? "hover:bg-gray-800 text-amber-400 hover:shadow-[0_0_15px_rgba(251,191,36,0.1)]"
+            : "hover:bg-gray-50 text-indigo-600 hover:shadow-[0_0_15px_rgba(79,70,229,0.1)]"
             }`}
         >
           {isDark ? <IconSun size={20} stroke={2} /> : <IconMoon size={20} stroke={2} />}
@@ -76,12 +130,14 @@ export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, o
           <button
             onClick={() => setShowNotifications(!showNotifications)}
             className={`p-2.5 rounded-xl transition-all duration-300 relative ${isDark
-                ? "hover:bg-gray-800 text-gray-400 hover:text-white"
-                : "hover:bg-gray-50 text-gray-500 hover:text-gray-900"
+              ? "hover:bg-gray-800 text-gray-400 hover:text-white"
+              : "hover:bg-gray-50 text-gray-500 hover:text-gray-900"
               }`}
           >
             <IconBellRinging size={20} stroke={2} />
-            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-blue-500 rounded-full border-2 border-inherit shadow-[0_0_10px_rgba(59,130,246,0.5)]"></span>
+            {unreadCount > 0 && (
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-blue-500 rounded-full border-2 border-inherit shadow-[0_0_10px_rgba(59,130,246,0.5)]"></span>
+            )}
           </button>
 
           {/* Notifications Dropdown */}
@@ -91,37 +147,57 @@ export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, o
                 }`}
             >
               <div className={`p-5 flex items-center justify-between border-b ${isDark ? "border-gray-800" : "border-gray-50"}`}>
-                <h3 className={`font-bold tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
-                  Notifications
-                </h3>
-                <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-500 text-[10px] font-extrabold uppercase tracking-tighter">
-                  4 New
-                </span>
+                <div className="flex items-center gap-2">
+                  <h3 className={`font-bold tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
+                    Notifications
+                  </h3>
+                  {unreadCount > 0 && (
+                    <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-500 text-[10px] font-extrabold uppercase tracking-tighter">
+                      {unreadCount} New
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={handleClearAll}
+                  className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-red-500 transition-colors"
+                >
+                  Clear All
+                </button>
               </div>
               <div className="max-h-[400px] overflow-y-auto scrollbar-hide">
-                {notifications.map((notif) => (
-                  <div
-                    key={notif.id}
-                    className={`p-4 group cursor-pointer transition-all duration-200 border-l-4 ${notif.unread
+                {loading ? (
+                  <div className="p-10 text-center"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div></div>
+                ) : notifications.length === 0 ? (
+                  <div className="p-10 text-center text-xs font-bold text-gray-500 uppercase">Inbox is empty</div>
+                ) : (
+                  notifications.map((notif) => (
+                    <div
+                      key={notif._id}
+                      onClick={() => handleMarkAsRead(notif._id)}
+                      className={`p-4 group cursor-pointer transition-all duration-200 border-l-4 ${notif.unread
                         ? "border-blue-500 bg-blue-500/5"
                         : "border-transparent"
-                      } ${isDark ? "hover:bg-gray-800/50" : "hover:bg-gray-50"
-                      }`}
-                  >
-                    <div className="flex justify-between items-start mb-1">
-                      <p className={`text-sm font-bold ${isDark ? "text-gray-200" : "text-gray-800"}`}>
-                        {notif.message}
+                        } ${isDark ? "hover:bg-gray-800/50" : "hover:bg-gray-50"
+                        }`}
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <p className={`text-sm font-bold ${isDark ? "text-gray-200" : "text-gray-800"}`}>
+                          {notif.message}
+                        </p>
+                        {notif.unread && <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>}
+                      </div>
+                      <p className={`text-xs font-semibold ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                        {formatTime(notif.time || notif.createdAt)}
                       </p>
-                      {notif.unread && <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>}
                     </div>
-                    <p className={`text-xs font-semibold ${isDark ? "text-gray-500" : "text-gray-400"}`}>
-                      {notif.time}
-                    </p>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
               <div className={`p-4 text-center border-t ${isDark ? "border-gray-800" : "border-gray-50"}`}>
-                <button className="text-blue-500 text-xs font-bold uppercase tracking-widest hover:text-blue-400 transition-colors">
+                <button
+                  onClick={() => { setShowNotifications(false); onNavigate('edits'); }}
+                  className="text-blue-500 text-xs font-bold uppercase tracking-widest hover:text-blue-400 transition-colors"
+                >
                   View All Activity
                 </button>
               </div>
@@ -134,8 +210,8 @@ export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, o
           <button
             onClick={() => setShowProfile(!showProfile)}
             className={`flex items-center gap-3 pl-2 pr-3 py-1.5 rounded-2xl transition-all duration-300 ${isDark
-                ? "hover:bg-gray-800 border border-transparent hover:border-gray-700"
-                : "hover:bg-gray-50 border border-transparent hover:border-gray-200"
+              ? "hover:bg-gray-800 border border-transparent hover:border-gray-700"
+              : "hover:bg-gray-50 border border-transparent hover:border-gray-200"
               }`}
           >
             <div className="relative">
@@ -182,8 +258,8 @@ export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, o
                     setShowProfile(false);
                   }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${isDark
-                      ? "text-gray-400 hover:bg-gray-800 hover:text-white"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    ? "text-gray-400 hover:bg-gray-800 hover:text-white"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                     }`}
                 >
                   <IconUser size={18} />
@@ -195,8 +271,8 @@ export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, o
                     setShowProfile(false);
                   }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${isDark
-                      ? "text-gray-400 hover:bg-gray-800 hover:text-white"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    ? "text-gray-400 hover:bg-gray-800 hover:text-white"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                     }`}
                 >
                   <IconSettings size={18} />
