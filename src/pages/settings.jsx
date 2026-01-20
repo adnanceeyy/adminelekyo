@@ -167,7 +167,7 @@ export default function Settings({ isDark }) {
                   onClick={async () => {
                     if (!confirm("Promote your account to Admin?")) return;
                     try {
-                      const res = await apiService.post('/users/promote-me', {});
+                      const res = await apiService.post('users/promote-me', {});
                       if (res.success) {
                         localStorage.setItem('adminToken', res.token);
                         toast.success('Promoted to Admin! Reloading...');
