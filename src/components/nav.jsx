@@ -268,7 +268,7 @@ export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, o
                   </div>
                   <div className="flex flex-col">
                     <p className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Admin.</p>
-                    <p className="text-[11px] font-medium text-gray-500">.admin@elekyo.com</p>
+                    <p className="text-[11px] font-medium text-gray-500">admin@elekyo.com</p>
                   </div>
                 </div>
               </div>

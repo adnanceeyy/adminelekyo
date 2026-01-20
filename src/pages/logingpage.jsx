@@ -91,6 +91,8 @@ export default function LoginPage() {
                     type="email"
                     placeholder="name@company.com"
                     value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
                     className={`w-full rounded-2xl pl-12 pr-4 py-3.5 text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${isDark ? "bg-gray-800 border-gray-700 text-white placeholder-gray-600" : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"}`}
                   />
                 </div>
@@ -106,6 +108,8 @@ export default function LoginPage() {
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
                     className={`w-full rounded-2xl pl-12 pr-12 py-3.5 text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${isDark ? "bg-gray-800 border-gray-700 text-white placeholder-gray-600" : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"}`}
                   />
                   <button
