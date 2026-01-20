@@ -13,6 +13,19 @@ import React, { useState } from 'react';
 import ProductService from '../services/product.service';
 import { toast } from 'react-hot-toast';
 
+const FormSection = ({ title, icon: Icon, children, colorClass, isDark }) => (
+  <div className={`p-8 rounded-[32px] border transition-all ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"
+    }`}>
+    <div className="flex items-center gap-3 mb-6">
+      <div className={`p-2 rounded-xl ${colorClass}`}>
+        <Icon size={20} />
+      </div>
+      <h3 className={`text-sm font-black uppercase tracking-[0.2em] ${isDark ? "text-gray-400" : "text-gray-500"}`}>{title}</h3>
+    </div>
+    {children}
+  </div>
+);
+
 export default function NewProducts({ isDark }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -111,19 +124,6 @@ export default function NewProducts({ isDark }) {
     });
   };
 
-  const FormSection = ({ title, icon: Icon, children, colorClass }) => (
-    <div className={`p-8 rounded-[32px] border transition-all ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"
-      }`}>
-      <div className="flex items-center gap-3 mb-6">
-        <div className={`p-2 rounded-xl ${colorClass}`}>
-          <Icon size={20} />
-        </div>
-        <h3 className={`text-sm font-black uppercase tracking-[0.2em] ${isDark ? "text-gray-400" : "text-gray-500"}`}>{title}</h3>
-      </div>
-      {children}
-    </div>
-  );
-
   return (
     <div className={`flex-1 flex flex-col h-full overflow-hidden ${isDark ? "bg-gray-950" : "bg-[#f8fafc]"}`}>
       {/* Header */}
@@ -162,7 +162,7 @@ export default function NewProducts({ isDark }) {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Left Column: Visual & Basic */}
             <div className="space-y-8">
-              <FormSection title="Visual Asset" icon={IconPhoto} colorClass="bg-purple-500 text-white shadow-lg shadow-purple-500/20">
+              <FormSection title="Visual Asset" icon={IconPhoto} colorClass="bg-purple-500 text-white shadow-lg shadow-purple-500/20" isDark={isDark}>
                 <div className="relative">
                   <input type="file" className="hidden" id="main-image" onChange={handleImageChange} accept="image/*" />
                   <label htmlFor="main-image" className={`group flex flex-col items-center justify-center min-h-[340px] border-2 border-dashed rounded-[40px] cursor-pointer transition-all duration-300 ${formData.image
@@ -189,7 +189,7 @@ export default function NewProducts({ isDark }) {
                 </div>
               </FormSection>
 
-              <FormSection title="Core Registry" icon={IconInfoCircle} colorClass="bg-blue-500 text-white shadow-lg shadow-blue-500/20">
+              <FormSection title="Core Registry" icon={IconInfoCircle} colorClass="bg-blue-500 text-white shadow-lg shadow-blue-500/20" isDark={isDark}>
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Official Name</label>
@@ -207,7 +207,7 @@ export default function NewProducts({ isDark }) {
 
             {/* Right Column: Pricing & Specs */}
             <div className="space-y-8">
-              <FormSection title="Commercial Parameters" icon={IconTag} colorClass="bg-amber-500 text-white shadow-lg shadow-amber-500/20">
+              <FormSection title="Commercial Parameters" icon={IconTag} colorClass="bg-amber-500 text-white shadow-lg shadow-amber-500/20" isDark={isDark}>
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Global MSRP</label>
@@ -228,7 +228,7 @@ export default function NewProducts({ isDark }) {
                 </div>
               </FormSection>
 
-              <FormSection title="Logistics & State" icon={IconDatabase} colorClass="bg-rose-500 text-white shadow-lg shadow-rose-500/20">
+              <FormSection title="Logistics & State" icon={IconDatabase} colorClass="bg-rose-500 text-white shadow-lg shadow-rose-500/20" isDark={isDark}>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Units</label>
@@ -260,7 +260,7 @@ export default function NewProducts({ isDark }) {
                 </div>
               </FormSection>
 
-              <FormSection title="Technical Build" icon={IconPackage} colorClass="bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">
+              <FormSection title="Technical Build" icon={IconPackage} colorClass="bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" isDark={isDark}>
                 <div className="space-y-6">
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
