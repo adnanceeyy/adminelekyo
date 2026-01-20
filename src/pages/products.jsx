@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import ProductService from '../services/product.service';
 import API_CONFIG from '../config/api.config';
+import { toast } from 'react-hot-toast';
 import {
   IconPlus,
   IconSearch,
@@ -44,10 +45,10 @@ export default function Products({ isDark, onNavigate }) {
     try {
       await ProductService.deleteProduct(productId);
       // Remove from UI
-      setProducts(products.filter(p => p.id !== productId));
-      alert('Product deleted successfully!');
+      setProducts(products.filter(p => p.id !== productId && p._id !== productId));
+      toast.success('Product deleted successfully!');
     } catch (err) {
-      alert('Failed to delete product: ' + (err.message || 'Unknown error'));
+      toast.error('Failed to delete product: ' + (err.message || 'Unknown error'));
     }
   };
 
@@ -235,7 +236,7 @@ export default function Products({ isDark, onNavigate }) {
                               <IconEdit size={18} stroke={2} />
                             </button>
                             <button
-                              onClick={() => handleDeleteProduct(product.id)}
+                              onClick={() => handleDeleteProduct(product._id || product.id)}
                               className={`p-2 rounded-lg transition-all ${isDark ? "hover:bg-rose-500/10 text-gray-500 hover:text-rose-400" : "hover:bg-rose-50 text-gray-400 hover:text-rose-600"}`}>
                               <IconTrash size={18} stroke={2} />
                             </button>

@@ -5,30 +5,44 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconPackage,
-  IconTrolley,
   IconAdjustmentsHorizontal,
   IconX,
-  IconCheck
+  IconCheck,
+  IconLoader
 } from '@tabler/icons-react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import ProductService from '../services/product.service';
+import { toast } from 'react-hot-toast';
 
 export default function EditProducts({ isDark }) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [products, setProducts] = useState([
-    { id: 1, name: 'Boat Rockerz 550', mrp: 1299, offer: 899, stock: 15, category: 'Audio & Music', rating: 4.8 },
-    { id: 2, name: 'Redragon K556 RGB', mrp: 4500, offer: 3499, stock: 450, category: 'Gaming', rating: 4.7 },
-    { id: 3, name: 'Oura Ring Gen 3', mrp: 1999, offer: 999, stock: 85, category: 'Mobile & Wearables', rating: 4.9 },
-    { id: 4, name: 'USB Flash Drive 64GB', mrp: 1500, offer: 1099, stock: 12, category: 'Extras', rating: 4.6 },
-    { id: 5, name: 'Smart LED Bulb', mrp: 999, offer: 799, stock: 32, category: 'Extras', rating: 4.7 },
-  ]);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  const itemsPerPage = 8;
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const data = await ProductService.getAllProducts();
+      setProducts(data);
+    } catch (err) {
+      toast.error(err.message || 'Failed to fetch products');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.category.toLowerCase().includes(searchTerm.toLowerCase())
+    (p.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (p.category?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (p.id?.toString() || '').includes(searchTerm)
   );
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
@@ -36,25 +50,52 @@ export default function EditProducts({ isDark }) {
   const displayedProducts = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
 
   const handleEdit = (product) => {
-    setEditingId(product.id);
+    setEditingId(product._id); // Use _id for reliable editing
     setFormData({ ...product });
   };
 
-  const handleSave = () => {
-    setProducts(products.map(p => p.id === editingId ? formData : p));
-    setEditingId(null);
-    setFormData({});
+  const handleSave = async () => {
+    try {
+      // Map back to backend structure if needed (already in structure)
+      // Send update
+      const idToUpdate = formData.id; // numeric id
+      // OR use _id. The route supports both. Let's use numeric ID if available, else _id.
+      // Actually my route update implementation checks idParam as numeric first.
+      // But wait, the route `router.put("/:id")` -> `findProduct(req.params.id)`.
+      // If I pass `_id`, it works. If I pass `id` (numeric), it works.
+      // Let's use `_id` as the param to be safe if `id` is somehow duplicate or missing (though it shouldn't be).
+      // Actually `formData` has `_id`.
+
+      await ProductService.updateProduct(formData._id || formData.id, formData);
+
+      setProducts(products.map(p => p._id === editingId ? { ...formData } : p));
+      setEditingId(null);
+      setFormData({});
+      toast.success('Product updated successfully');
+    } catch (err) {
+      toast.error(err.message || 'Failed to update product');
+    }
   };
 
-  const handleDelete = (id) => {
-    setProducts(products.filter(p => p.id !== id));
+  const handleDelete = async (product) => {
+    if (!window.confirm(`Are you sure you want to delete "${product.name}"?`)) return;
+    try {
+      // Use _id or id.
+      await ProductService.deleteProduct(product._id || product.id);
+      setProducts(products.filter(p => p._id !== product._id));
+      toast.success('Product deleted successfully');
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete product');
+    }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: isNaN(value) ? value : parseFloat(value)
+      [name]: (name === 'price' || name === 'mrPrice' || name === 'countInStock' || name === 'productRating')
+        ? (value === '' ? '' : Number(value))
+        : value
     }));
   };
 
@@ -84,7 +125,7 @@ export default function EditProducts({ isDark }) {
                 }`}
             />
           </div>
-          <button className={`p-2.5 rounded-xl border transition-all ${isDark ? "bg-gray-900 border-gray-800 text-gray-400 hover:text-white" : "bg-white border-gray-100 text-gray-500 hover:text-gray-900"
+          <button onClick={fetchProducts} className={`p-2.5 rounded-xl border transition-all ${isDark ? "bg-gray-900 border-gray-800 text-gray-400 hover:text-white" : "bg-white border-gray-100 text-gray-500 hover:text-gray-900"
             }`}>
             <IconAdjustmentsHorizontal size={20} />
           </button>
@@ -108,108 +149,120 @@ export default function EditProducts({ isDark }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {displayedProducts.map((product) => (
-                    <tr key={product.id} className={`group border-b last:border-0 transition-colors ${isDark ? "border-gray-800 hover:bg-gray-950/50" : "border-gray-50 hover:bg-gray-50/30"}`}>
-                      <td className="px-8 py-6">
-                        <span className={`text-[10px] font-black ${isDark ? "text-gray-700" : "text-gray-300"}`}>#{product.id.toString().padStart(4, '0')}</span>
+                  {loading ? (
+                    <tr>
+                      <td colSpan="6" className="py-20 text-center">
+                        <div className="flex justify-center"><IconLoader className="animate-spin text-blue-500" /></div>
                       </td>
-                      <td className="px-8 py-6">
-                        {editingId === product.id ? (
-                          <input
-                            type="text"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleInputChange}
-                            className={`w-full px-3 py-2 rounded-lg text-sm font-black border ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
-                          />
-                        ) : (
-                          <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-xl bg-linear-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xs font-black shadow-lg shadow-blue-500/10`}>
-                              {product.name.charAt(0)}
-                            </div>
-                            <div>
-                              <p className={`text-sm font-black ${isDark ? "text-gray-200" : "text-gray-900"}`}>{product.name}</p>
-                              <div className="flex items-center gap-1 mt-0.5">
-                                <span className="text-[10px] text-amber-500 font-black">★ {product.rating}</span>
+                    </tr>
+                  ) : displayedProducts.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="py-10 text-center text-gray-500">No products found.</td>
+                    </tr>
+                  ) : (
+                    displayedProducts.map((product) => (
+                      <tr key={product._id || product.id} className={`group border-b last:border-0 transition-colors ${isDark ? "border-gray-800 hover:bg-gray-950/50" : "border-gray-50 hover:bg-gray-50/30"}`}>
+                        <td className="px-8 py-6">
+                          <span className={`text-[10px] font-black ${isDark ? "text-gray-700" : "text-gray-300"}`}>#{product.id?.toString().padStart(4, '0')}</span>
+                        </td>
+                        <td className="px-8 py-6">
+                          {editingId === product._id ? (
+                            <input
+                              type="text"
+                              name="name"
+                              value={formData.name}
+                              onChange={handleInputChange}
+                              className={`w-full px-3 py-2 rounded-lg text-sm font-black border ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
+                            />
+                          ) : (
+                            <div className="flex items-center gap-3">
+                              <div className={`w-10 h-10 rounded-xl bg-linear-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xs font-black shadow-lg shadow-blue-500/10`}>
+                                {product.name?.charAt(0)}
+                              </div>
+                              <div>
+                                <p className={`text-sm font-black ${isDark ? "text-gray-200" : "text-gray-900"}`}>{product.name}</p>
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  <span className="text-[10px] text-amber-500 font-black">★ {product.productRating}</span>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-8 py-6">
-                        {editingId === product.id ? (
-                          <input
-                            type="text"
-                            name="category"
-                            value={formData.category}
-                            onChange={handleInputChange}
-                            className={`px-3 py-2 rounded-lg text-sm font-black border ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
-                          />
-                        ) : (
-                          <span className={`inline-flex px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${isDark ? "bg-gray-800 text-gray-400" : "bg-gray-100 text-gray-500"}`}>
-                            {product.category}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-8 py-6">
-                        {editingId === product.id ? (
-                          <input
-                            type="number"
-                            name="stock"
-                            value={formData.stock}
-                            onChange={handleInputChange}
-                            className={`w-24 px-3 py-2 rounded-lg text-sm font-black border ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
-                          />
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <IconPackage size={14} className={product.stock < 50 ? "text-rose-500" : "text-emerald-500"} />
-                            <span className={`text-sm font-black ${isDark ? "text-gray-300" : "text-gray-700"}`}>{product.stock} units</span>
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-8 py-6">
-                        {editingId === product.id ? (
-                          <div className="flex items-center gap-2">
+                          )}
+                        </td>
+                        <td className="px-8 py-6">
+                          {editingId === product._id ? (
+                            <input
+                              type="text"
+                              name="category"
+                              value={formData.category}
+                              onChange={handleInputChange}
+                              className={`px-3 py-2 rounded-lg text-sm font-black border ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
+                            />
+                          ) : (
+                            <span className={`inline-flex px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${isDark ? "bg-gray-800 text-gray-400" : "bg-gray-100 text-gray-500"}`}>
+                              {product.category}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-8 py-6">
+                          {editingId === product._id ? (
                             <input
                               type="number"
-                              name="offer"
-                              value={formData.offer}
+                              name="countInStock"
+                              value={formData.countInStock}
                               onChange={handleInputChange}
                               className={`w-24 px-3 py-2 rounded-lg text-sm font-black border ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
                             />
-                          </div>
-                        ) : (
-                          <div>
-                            <p className={`text-sm font-black ${isDark ? "text-white" : "text-gray-900"}`}>${product.offer}</p>
-                            <p className="text-[10px] font-bold text-gray-500 line-through">${product.mrp}</p>
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-8 py-6 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
-                          {editingId === product.id ? (
-                            <>
-                              <button onClick={handleSave} className="p-2 bg-emerald-500 text-white rounded-xl shadow-lg shadow-emerald-500/20 hover:scale-105 transition-transform">
-                                <IconCheck size={18} stroke={3} />
-                              </button>
-                              <button onClick={() => setEditingId(null)} className="p-2 bg-rose-500 text-white rounded-xl shadow-lg shadow-rose-500/20 hover:scale-105 transition-transform">
-                                <IconX size={18} stroke={3} />
-                              </button>
-                            </>
                           ) : (
-                            <>
-                              <button onClick={() => handleEdit(product)} className={`p-2 rounded-xl border transition-all ${isDark ? "bg-gray-800 border-gray-700 text-blue-400 hover:bg-blue-500 hover:text-white" : "bg-white border-gray-100 text-blue-600 hover:bg-blue-600 hover:text-white shadow-sm"}`}>
-                                <IconEdit size={18} stroke={2.5} />
-                              </button>
-                              <button onClick={() => handleDelete(product.id)} className={`p-2 rounded-xl border transition-all ${isDark ? "bg-gray-800 border-gray-700 text-rose-500 hover:bg-rose-500 hover:text-white" : "bg-white border-gray-100 text-rose-600 hover:bg-rose-600 hover:text-white shadow-sm"}`}>
-                                <IconTrash size={18} stroke={2.5} />
-                              </button>
-                            </>
+                            <div className="flex items-center gap-2">
+                              <IconPackage size={14} className={product.countInStock < 50 ? "text-rose-500" : "text-emerald-500"} />
+                              <span className={`text-sm font-black ${isDark ? "text-gray-300" : "text-gray-700"}`}>{product.countInStock} units</span>
+                            </div>
                           )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="px-8 py-6">
+                          {editingId === product._id ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                name="price"
+                                value={formData.price}
+                                onChange={handleInputChange}
+                                className={`w-24 px-3 py-2 rounded-lg text-sm font-black border ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
+                              />
+                            </div>
+                          ) : (
+                            <div>
+                              <p className={`text-sm font-black ${isDark ? "text-white" : "text-gray-900"}`}>${product.price}</p>
+                              <p className="text-[10px] font-bold text-gray-500 line-through">${product.mrPrice}</p>
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-8 py-6 text-right">
+                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
+                            {editingId === product._id ? (
+                              <>
+                                <button onClick={handleSave} className="p-2 bg-emerald-500 text-white rounded-xl shadow-lg shadow-emerald-500/20 hover:scale-105 transition-transform">
+                                  <IconCheck size={18} stroke={3} />
+                                </button>
+                                <button onClick={() => setEditingId(null)} className="p-2 bg-rose-500 text-white rounded-xl shadow-lg shadow-rose-500/20 hover:scale-105 transition-transform">
+                                  <IconX size={18} stroke={3} />
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button onClick={() => handleEdit(product)} className={`p-2 rounded-xl border transition-all ${isDark ? "bg-gray-800 border-gray-700 text-blue-400 hover:bg-blue-500 hover:text-white" : "bg-white border-gray-100 text-blue-600 hover:bg-blue-600 hover:text-white shadow-sm"}`}>
+                                  <IconEdit size={18} stroke={2.5} />
+                                </button>
+                                <button onClick={() => handleDelete(product)} className={`p-2 rounded-xl border transition-all ${isDark ? "bg-gray-800 border-gray-700 text-rose-500 hover:bg-rose-500 hover:text-white" : "bg-white border-gray-100 text-rose-600 hover:bg-rose-600 hover:text-white shadow-sm"}`}>
+                                  <IconTrash size={18} stroke={2.5} />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -218,7 +271,7 @@ export default function EditProducts({ isDark }) {
           {/* Pagination */}
           <div className="flex items-center justify-between px-2">
             <p className={`text-[10px] font-black uppercase tracking-widest ${isDark ? "text-gray-600" : "text-gray-400"}`}>
-              System Paging: {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredProducts.length)} / {filteredProducts.length}
+              System Paging: {displayedProducts.length > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + itemsPerPage, filteredProducts.length)} / {filteredProducts.length}
             </p>
             <div className="flex items-center gap-2">
               <button
@@ -244,7 +297,7 @@ export default function EditProducts({ isDark }) {
               </div>
               <button
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
+                disabled={currentPage === totalPages || totalPages === 0}
                 className={`p-2 rounded-xl border transition-all disabled:opacity-30 ${isDark ? "bg-gray-900 border-gray-800 text-white" : "bg-white border-gray-100 text-gray-900 shadow-sm"}`}
               >
                 <IconChevronRight size={20} />

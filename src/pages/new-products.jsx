@@ -6,13 +6,15 @@ import {
   IconDatabase,
   IconPhoto,
   IconInfoCircle,
-  IconArrowRight,
   IconCloudUpload,
   IconX
 } from '@tabler/icons-react';
 import React, { useState } from 'react';
+import ProductService from '../services/product.service';
+import { toast } from 'react-hot-toast';
 
 export default function NewProducts({ isDark }) {
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     productName: '',
     mrp: '',
@@ -20,7 +22,6 @@ export default function NewProducts({ isDark }) {
     image: null,
     stock: '',
     rating: '',
-    review: '',
     description: '',
     warranty: '',
     category: '',
@@ -40,6 +41,10 @@ export default function NewProducts({ isDark }) {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit check
+        toast.error("Image too large. Please use an image under 5MB.");
+        return;
+      }
       const reader = new FileReader();
       reader.onload = (event) => {
         setFormData(prev => ({
@@ -51,10 +56,42 @@ export default function NewProducts({ isDark }) {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Product added:', formData);
-    handleReset();
+
+    if (!formData.productName || !formData.offerPrice || !formData.stock) {
+      toast.error("Please fill in all required fields (Name, Price, Stock)");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const productPayload = {
+        name: formData.productName,
+        productDetailedName: formData.productName, // Can be same for now
+        description: formData.description || 'No description provided.',
+        price: Number(formData.offerPrice),
+        mrPrice: Number(formData.mrp),
+        countInStock: Number(formData.stock),
+        productRating: Number(formData.rating) || 0,
+        image: formData.image,
+        category: formData.category,
+        brand: formData.brand,
+        model: formData.model,
+        warranty: formData.warranty,
+        color: formData.color
+      };
+
+      await ProductService.addProduct(productPayload);
+      toast.success('Product created successfully!');
+      handleReset();
+    } catch (err) {
+      // console.error(err);
+      toast.error(err.message || 'Failed to create product');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = () => {
@@ -65,7 +102,6 @@ export default function NewProducts({ isDark }) {
       image: null,
       stock: '',
       rating: '',
-      review: '',
       description: '',
       warranty: '',
       category: '',
@@ -111,11 +147,12 @@ export default function NewProducts({ isDark }) {
           </button>
           <button
             onClick={handleSubmit}
+            disabled={loading}
             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg transition-all ${isDark ? "bg-blue-600 text-white hover:bg-blue-500 shadow-blue-500/10" : "bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/20"
-              }`}
+              } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <IconPlus size={18} stroke={2.5} />
-            <span>Deploy SKU</span>
+            <span>{loading ? 'Deploying...' : 'Deploy SKU'}</span>
           </button>
         </div>
       </div>
@@ -127,10 +164,10 @@ export default function NewProducts({ isDark }) {
             <div className="space-y-8">
               <FormSection title="Visual Asset" icon={IconPhoto} colorClass="bg-purple-500 text-white shadow-lg shadow-purple-500/20">
                 <div className="relative">
-                  <input type="file" className="hidden" id="main-image" onChange={handleImageChange} />
+                  <input type="file" className="hidden" id="main-image" onChange={handleImageChange} accept="image/*" />
                   <label htmlFor="main-image" className={`group flex flex-col items-center justify-center min-h-[340px] border-2 border-dashed rounded-[40px] cursor-pointer transition-all duration-300 ${formData.image
-                      ? "border-emerald-500/50 bg-emerald-500/5"
-                      : isDark ? "border-gray-800 bg-gray-950/50 hover:border-blue-500/40 hover:bg-blue-500/5" : "border-gray-200 bg-gray-50 hover:border-blue-500/40"
+                    ? "border-emerald-500/50 bg-emerald-500/5"
+                    : isDark ? "border-gray-800 bg-gray-950/50 hover:border-blue-500/40 hover:bg-blue-500/5" : "border-gray-200 bg-gray-50 hover:border-blue-500/40"
                     }`}>
                     {formData.image ? (
                       <div className="relative w-full h-full p-4">
@@ -213,11 +250,12 @@ export default function NewProducts({ isDark }) {
                   <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Taxonomy Hub</label>
                   <select name="category" value={formData.category} onChange={handleChange} className={`w-full px-6 py-4 rounded-2xl text-sm font-black border transition-all focus:ring-2 focus:ring-blue-500/20 focus:outline-none ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"
                     }`} required>
-                    <option value="">Select Protocol</option>
-                    <option value="electronics">Neural Electronics</option>
-                    <option value="clothing">Synthethic Apparel</option>
-                    <option value="books">Digital Manuscripts</option>
-                    <option value="furniture">Modular Architecture</option>
+                    <option value="">Select Category</option>
+                    <option value="Audio & Music">Audio & Music</option>
+                    <option value="Computing">Computing</option>
+                    <option value="Mobile & Wearables">Mobile & Wearables</option>
+                    <option value="Gaming">Gaming</option>
+                    <option value="Extras">Extras</option>
                   </select>
                 </div>
               </FormSection>
