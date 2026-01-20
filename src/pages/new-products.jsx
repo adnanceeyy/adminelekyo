@@ -9,8 +9,9 @@ import {
   IconCloudUpload,
   IconX
 } from '@tabler/icons-react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ProductService from '../services/product.service';
+import CategoryService from '../services/category.service';
 import { toast } from 'react-hot-toast';
 
 const FormSection = ({ title, icon: Icon, children, colorClass, isDark }) => (
@@ -28,6 +29,7 @@ const FormSection = ({ title, icon: Icon, children, colorClass, isDark }) => (
 
 export default function NewProducts({ isDark }) {
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
     productName: '',
     mrp: '',
@@ -42,6 +44,18 @@ export default function NewProducts({ isDark }) {
     model: '',
     color: '',
   });
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await CategoryService.getAllCategories();
+        setCategories(data);
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -251,11 +265,9 @@ export default function NewProducts({ isDark }) {
                   <select name="category" value={formData.category} onChange={handleChange} className={`w-full px-6 py-4 rounded-2xl text-sm font-black border transition-all focus:ring-2 focus:ring-blue-500/20 focus:outline-none ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"
                     }`} required>
                     <option value="">Select Category</option>
-                    <option value="Audio & Music">Audio & Music</option>
-                    <option value="Computing">Computing</option>
-                    <option value="Mobile & Wearables">Mobile & Wearables</option>
-                    <option value="Gaming">Gaming</option>
-                    <option value="Extras">Extras</option>
+                    {categories.map(cat => (
+                      <option key={cat._id} value={cat.name}>{cat.name}</option>
+                    ))}
                   </select>
                 </div>
               </FormSection>

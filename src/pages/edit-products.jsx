@@ -12,11 +12,13 @@ import {
 } from '@tabler/icons-react';
 import React, { useState, useEffect } from 'react';
 import ProductService from '../services/product.service';
+import CategoryService from '../services/category.service';
 import { toast } from 'react-hot-toast';
 
 export default function EditProducts({ isDark }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({});
@@ -24,16 +26,20 @@ export default function EditProducts({ isDark }) {
   const itemsPerPage = 8;
 
   useEffect(() => {
-    fetchProducts();
+    fetchInitialData();
   }, []);
 
-  const fetchProducts = async () => {
+  const fetchInitialData = async () => {
     try {
       setLoading(true);
-      const data = await ProductService.getAllProducts();
-      setProducts(data);
+      const [productsData, categoriesData] = await Promise.all([
+        ProductService.getAllProducts(),
+        CategoryService.getAllCategories()
+      ]);
+      setProducts(productsData);
+      setCategories(categoriesData);
     } catch (err) {
-      toast.error(err.message || 'Failed to fetch products');
+      toast.error(err.message || 'Failed to fetch data');
     } finally {
       setLoading(false);
     }
@@ -125,7 +131,7 @@ export default function EditProducts({ isDark }) {
                 }`}
             />
           </div>
-          <button onClick={fetchProducts} className={`p-2.5 rounded-xl border transition-all ${isDark ? "bg-gray-900 border-gray-800 text-gray-400 hover:text-white" : "bg-white border-gray-100 text-gray-500 hover:text-gray-900"
+          <button onClick={fetchInitialData} className={`p-2.5 rounded-xl border transition-all ${isDark ? "bg-gray-900 border-gray-800 text-gray-400 hover:text-white" : "bg-white border-gray-100 text-gray-500 hover:text-gray-900"
             }`}>
             <IconAdjustmentsHorizontal size={20} />
           </button>
@@ -190,13 +196,17 @@ export default function EditProducts({ isDark }) {
                         </td>
                         <td className="px-8 py-6">
                           {editingId === product._id ? (
-                            <input
-                              type="text"
+                            <select
                               name="category"
                               value={formData.category}
                               onChange={handleInputChange}
-                              className={`px-3 py-2 rounded-lg text-sm font-black border ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
-                            />
+                              className={`w-full px-3 py-2 rounded-lg text-sm font-black border focus:ring-2 focus:ring-blue-500/20 focus:outline-none ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
+                            >
+                              <option value="">Select Category</option>
+                              {categories.map(cat => (
+                                <option key={cat._id} value={cat.name}>{cat.name}</option>
+                              ))}
+                            </select>
                           ) : (
                             <span className={`inline-flex px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${isDark ? "bg-gray-800 text-gray-400" : "bg-gray-100 text-gray-500"}`}>
                               {product.category}
