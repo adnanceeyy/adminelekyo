@@ -13,6 +13,7 @@ import {
 import React, { useState, useEffect } from 'react';
 import ProductService from '../services/product.service';
 import CategoryService from '../services/category.service';
+import API_CONFIG from '../config/api.config';
 import { toast } from 'react-hot-toast';
 
 export default function EditProducts({ isDark }) {
@@ -182,13 +183,17 @@ export default function EditProducts({ isDark }) {
                             />
                           ) : (
                             <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-xl bg-linear-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xs font-black shadow-lg shadow-blue-500/10`}>
-                                {product.name?.charAt(0)}
+                              <div className={`w-10 h-10 rounded-xl bg-linear-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white overflow-hidden shadow-lg shadow-blue-500/10`}>
+                                {product.image ? (
+                                  <img src={API_CONFIG.getAssetUrl(product.image)} className="w-full h-full object-cover" />
+                                ) : (
+                                  product.name?.charAt(0)
+                                )}
                               </div>
-                              <div>
-                                <p className={`text-sm font-black ${isDark ? "text-gray-200" : "text-gray-900"}`}>{product.name}</p>
+                              <div className="max-w-[200px]">
+                                <p className={`text-sm font-black truncate ${isDark ? "text-gray-200" : "text-gray-900"}`}>{product.name}</p>
                                 <div className="flex items-center gap-1 mt-0.5">
-                                  <span className="text-[10px] text-amber-500 font-black">★ {product.productRating}</span>
+                                  <span className="text-[10px] text-amber-500 font-black">★ {product.productRating || 0}</span>
                                 </div>
                               </div>
                             </div>
@@ -231,19 +236,32 @@ export default function EditProducts({ isDark }) {
                         </td>
                         <td className="px-8 py-6">
                           {editingId === product._id ? (
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="number"
-                                name="price"
-                                value={formData.price}
-                                onChange={handleInputChange}
-                                className={`w-24 px-3 py-2 rounded-lg text-sm font-black border ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
-                              />
+                            <div className="flex flex-col gap-2">
+                              <div className="flex items-center gap-1">
+                                <span className={`text-[10px] font-bold ${isDark ? "text-gray-500" : "text-gray-400"}`}>OFFER:</span>
+                                <input
+                                  type="number"
+                                  name="price"
+                                  value={formData.price}
+                                  onChange={handleInputChange}
+                                  className={`w-24 px-3 py-1.5 rounded-lg text-sm font-black border ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
+                                />
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className={`text-[10px] font-bold ${isDark ? "text-gray-500" : "text-gray-400"}`}>MRP:</span>
+                                <input
+                                  type="number"
+                                  name="mrPrice"
+                                  value={formData.mrPrice}
+                                  onChange={handleInputChange}
+                                  className={`w-24 px-3 py-1.5 rounded-lg text-sm font-black border ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
+                                />
+                              </div>
                             </div>
                           ) : (
                             <div>
-                              <p className={`text-sm font-black ${isDark ? "text-white" : "text-gray-900"}`}>${product.price}</p>
-                              <p className="text-[10px] font-bold text-gray-500 line-through">${product.mrPrice}</p>
+                              <p className={`text-sm font-black ${isDark ? "text-white" : "text-gray-900"}`}>₹{product.price}</p>
+                              <p className="text-[10px] font-bold text-gray-500 line-through">₹{product.mrPrice}</p>
                             </div>
                           )}
                         </td>

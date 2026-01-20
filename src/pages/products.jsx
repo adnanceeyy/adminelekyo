@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import ProductService from '../services/product.service';
+import CategoryService from '../services/category.service';
 import API_CONFIG from '../config/api.config';
 import { toast } from 'react-hot-toast';
 import {
@@ -14,9 +15,11 @@ import {
 
 export default function Products({ isDark, onNavigate }) {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
 
   // Fetch products from backend on component mount
   useEffect(() => {
@@ -26,8 +29,12 @@ export default function Products({ isDark, onNavigate }) {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const data = await ProductService.getAllProducts();
-      setProducts(data);
+      const [productsData, categoriesData] = await Promise.all([
+        ProductService.getAllProducts(),
+        CategoryService.getAllCategories()
+      ]);
+      setProducts(productsData);
+      setCategories(categoriesData);
       setError(null);
     } catch (err) {
       setError(err.message || 'Failed to fetch products');
@@ -50,12 +57,16 @@ export default function Products({ isDark, onNavigate }) {
     }
   };
 
-  // Filter products based on search query
-  const filteredProducts = products.filter(product =>
-    product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.id?.toString().includes(searchQuery) ||
-    product.category?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter products based on search query and category
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.id?.toString().includes(searchQuery) ||
+      product.category?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
+
+    return matchesSearch && matchesCategory;
+  });
 
   // Helper function to determine stock status
   const getStockStatus = (stock) => {
@@ -106,11 +117,16 @@ export default function Products({ isDark, onNavigate }) {
             />
           </div>
           <div className="flex items-center gap-2">
-            <button className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-all border ${isDark ? "bg-gray-950 border-gray-800 text-gray-400 hover:text-white" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-              }`}>
-              <IconFilter size={18} />
-              <span>Filter</span>
-            </button>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className={`px-4 py-2 rounded-xl text-sm font-bold border focus:outline-none focus:ring-2 focus:ring-blue-500/10 ${isDark ? "bg-gray-950 border-gray-800 text-gray-200" : "bg-white border-gray-200 text-gray-700"}`}
+            >
+              <option value="All">All Categories</option>
+              {categories.map(cat => (
+                <option key={cat._id} value={cat.name}>{cat.name}</option>
+              ))}
+            </select>
           </div>
         </div>
 
