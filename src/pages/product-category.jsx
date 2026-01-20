@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { IconEdit, IconTrash, IconPlus, IconX, IconCheck, IconLoader, IconDotsVertical } from '@tabler/icons-react';
+import { IconEdit, IconTrash, IconPlus, IconX, IconLoader } from '@tabler/icons-react';
 import CategoryService from '../services/category.service';
 import { toast } from 'react-hot-toast';
 

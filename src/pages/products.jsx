@@ -5,13 +5,11 @@ import { toast } from 'react-hot-toast';
 import {
   IconPlus,
   IconSearch,
-  IconFilter,
   IconDotsVertical,
   IconEdit,
   IconTrash,
   IconPackage,
-  IconArrowUpRight,
-  IconArrowDownRight
+  IconFilter
 } from '@tabler/icons-react';
 
 export default function Products({ isDark, onNavigate }) {
