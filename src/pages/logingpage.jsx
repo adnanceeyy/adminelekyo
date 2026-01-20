@@ -7,13 +7,24 @@ import {
   IconArrowRight,
   IconShieldLock,
   IconEye,
-  IconEyeOff
+  IconEyeOff,
+  IconSun,
+  IconMoon
 } from "@tabler/icons-react";
 
-export default function LoginPage({ isDark = true }) {
-  const [email, setEmail] = useState("admin@gmail.com");
-  const [password, setPassword] = useState("admin@123");
+export default function LoginPage() {
+  const [isDark, setIsDark] = useState(() => {
+    return localStorage.getItem('adminTheme') === 'light' ? false : true;
+  });
+
+  const toggleTheme = () => {
+    const newTheme = !isDark;
+    setIsDark(newTheme);
+    localStorage.setItem('adminTheme', newTheme ? 'dark' : 'light');
+  };
   const [error, setError] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
@@ -46,6 +57,17 @@ export default function LoginPage({ isDark = true }) {
 
   return (
     <div className={`min-h-screen flex items-center justify-center p-6 font-montserrat transition-colors duration-500 ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
+      {/* Theme Toggle */}
+      <button
+        onClick={toggleTheme}
+        className={`absolute top-6 right-6 p-3 rounded-2xl transition-all duration-300 ${isDark
+          ? "bg-gray-900 text-yellow-400 hover:bg-gray-800 border border-gray-800"
+          : "bg-white text-blue-600 hover:bg-gray-100 border border-gray-100 shadow-sm"
+          }`}
+      >
+        {isDark ? <IconSun size={20} stroke={2} /> : <IconMoon size={20} stroke={2} />}
+      </button>
+
       <div className="relative z-10 w-full max-w-[420px]">
         {/* Simple Brand Header */}
         <div className="text-center mb-10">
@@ -69,7 +91,6 @@ export default function LoginPage({ isDark = true }) {
                     type="email"
                     placeholder="name@company.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
                     className={`w-full rounded-2xl pl-12 pr-4 py-3.5 text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${isDark ? "bg-gray-800 border-gray-700 text-white placeholder-gray-600" : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"}`}
                   />
                 </div>
@@ -78,7 +99,6 @@ export default function LoginPage({ isDark = true }) {
               <div className="space-y-2">
                 <div className="flex justify-between items-center px-1">
                   <label className={`text-xs font-bold ${isDark ? "text-gray-400" : "text-gray-600"}`}>Password</label>
-                  <button type="button" className="text-xs font-bold text-blue-500 hover:text-blue-600 transition-colors">Forgot Password?</button>
                 </div>
                 <div className="relative group">
                   <IconLock size={20} className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${isDark ? "text-gray-500 group-focus-within:text-blue-500" : "text-gray-400 group-focus-within:text-blue-600"}`} />
@@ -86,7 +106,6 @@ export default function LoginPage({ isDark = true }) {
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
                     className={`w-full rounded-2xl pl-12 pr-12 py-3.5 text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${isDark ? "bg-gray-800 border-gray-700 text-white placeholder-gray-600" : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"}`}
                   />
                   <button

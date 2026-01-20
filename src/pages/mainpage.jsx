@@ -14,7 +14,14 @@ import Orders from "./orders";
 import { useNavigate } from "react-router-dom";
 
 export default function Mainpage() {
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(() => {
+    return localStorage.getItem('adminTheme') === 'light' ? false : true;
+  });
+
+  // Save theme to localStorage
+  React.useEffect(() => {
+    localStorage.setItem('adminTheme', isDark ? 'dark' : 'light');
+  }, [isDark]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentPage, setCurrentPage] = useState(() => {
     // Load saved page from localStorage if it exists

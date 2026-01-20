@@ -117,7 +117,11 @@ export default function Dashboard({ isDark, onNavigate }) {
 
       const dailyRevenue = last7Days.map(date => {
         const dayTotal = orders
-          .filter(o => o.createdAt && o.createdAt.split('T')[0] === date)
+          .filter(o => {
+            if (!o.createdAt) return false;
+            const orderDate = new Date(o.createdAt).toISOString().split('T')[0];
+            return orderDate === date;
+          })
           .reduce((sum, o) => sum + (o.paymentSummary?.totalAmount || 0), 0);
 
         return {

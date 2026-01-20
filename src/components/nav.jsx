@@ -14,12 +14,22 @@ import {
 import React, { useState, useEffect } from 'react'
 import NotificationService from '../services/notification.service';
 import { toast } from 'react-hot-toast';
+import Modal from './Modal';
 
 export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, onNavigate }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Custom Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => { },
+    type: 'danger'
+  });
 
   useEffect(() => {
     fetchNotifications(); // Initial fetch
@@ -55,17 +65,30 @@ export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, o
   };
 
   const handleClearAll = async () => {
-    try {
-      if (!confirm("Clear all notifications?")) return;
-      await NotificationService.clearAll();
-      setNotifications([]);
-      toast.success("Notifications cleared");
-    } catch (err) {
-      toast.error(err);
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Clear Notifications',
+      message: 'Are you sure you want to permanently clear all notifications? This action cannot be undone.',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          await NotificationService.clearAll();
+          setNotifications([]);
+          toast.success("Notifications cleared");
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        } catch (err) {
+          toast.error(err);
+        }
+      }
+    });
   };
 
   const unreadCount = notifications.filter(n => n.unread).length;
+
+  const adminUser = JSON.parse(localStorage.getItem('adminUser') || '{}');
+  const adminName = adminUser.name || 'Admin';
+  const adminEmail = adminUser.email || 'admin@eleckyo.com';
+  const adminInitials = adminName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
 
   const formatTime = (dateString) => {
     const date = new Date(dateString);
@@ -80,10 +103,10 @@ export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, o
 
   return (
     <div
-      className={`relative z-20 border-b px-6 py-3 flex items-center justify-between transition-all duration-300 ${isDark ? "bg-gray-950/80 backdrop-blur-xl border-gray-900" : "bg-white/80 backdrop-blur-xl border-gray-100"
+      className={`px-4 sm:px-8 h-20 flex items-center justify-between border-b transition-all duration-500 z-40 ${isDark ? "bg-gray-950 border-gray-900 shadow-[0_4px_20px_rgba(0,0,0,0.3)]" : "bg-white border-gray-100 shadow-sm"
         }`}
     >
-      <div className="flex items-center flex-1 gap-6">
+      <div className="flex items-center gap-4">
         <button
           onClick={toggleSidebar}
           className={`p-2 rounded-xl transition-all duration-300 ${isDark
@@ -91,35 +114,33 @@ export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, o
             : "hover:bg-gray-50 text-gray-500 hover:text-gray-900"
             }`}
         >
-          {sidebarOpen ? <IconX size={22} stroke={2.5} /> : <IconMenu2 size={22} stroke={2.5} />}
+          {sidebarOpen ? <IconX size={20} stroke={2} /> : <IconMenu2 size={20} stroke={2} />}
         </button>
 
         {/* Search Bar */}
-        <div className="relative group hidden md:block w-full max-w-md">
+        <div className="relative group hidden sm:block">
           <IconSearch
-            className={`absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors duration-300 ${isDark ? "text-gray-600 group-focus-within:text-blue-500" : "text-gray-400 group-focus-within:text-blue-600"
-              }`}
             size={18}
-            stroke={2}
+            className={`absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors ${isDark ? "text-gray-600 group-focus-within:text-blue-500" : "text-gray-400"}`}
           />
           <input
-            type="search"
-            placeholder="Search analytics, orders, or tools..."
-            className={`w-full rounded-2xl pl-11 pr-4 py-2 text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${isDark
-              ? "bg-gray-900 border border-gray-800 text-gray-200 placeholder-gray-600 focus:bg-gray-800"
-              : "bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white"
+            type="text"
+            placeholder="Search commands (⌘K)"
+            className={`w-64 rounded-xl pl-11 pr-4 py-2.5 text-xs font-bold transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 border ${isDark
+              ? "bg-gray-900/50 border-gray-800 text-white placeholder-gray-600"
+              : "bg-gray-50/50 border-gray-100 text-gray-900 placeholder-gray-400"
               }`}
           />
         </div>
       </div>
 
-      <div className="flex gap-2 items-center">
+      <div className="flex items-center gap-3 md:gap-4">
         {/* Theme Toggle */}
         <button
           onClick={toggleTheme}
           className={`p-2.5 rounded-xl transition-all duration-300 ${isDark
-            ? "hover:bg-gray-800 text-amber-400 hover:shadow-[0_0_15px_rgba(251,191,36,0.1)]"
-            : "hover:bg-gray-50 text-indigo-600 hover:shadow-[0_0_15px_rgba(79,70,229,0.1)]"
+            ? "hover:bg-gray-800 text-gray-400 hover:text-yellow-400"
+            : "hover:bg-gray-50 text-gray-500 hover:text-blue-600"
             }`}
         >
           {isDark ? <IconSun size={20} stroke={2} /> : <IconMoon size={20} stroke={2} />}
@@ -216,16 +237,16 @@ export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, o
           >
             <div className="relative">
               <div className="w-9 h-9 rounded-xl overflow-hidden bg-linear-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white text-sm font-extrabold shadow-lg shadow-blue-500/20">
-                AD
+                {adminInitials}
               </div>
               <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-gray-950"></div>
             </div>
             <div className="hidden lg:flex flex-col items-start leading-tight">
               <span className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
-                Admin Sarah
+                {adminName}
               </span>
               <span className={`text-[10px] font-bold uppercase tracking-tighter ${isDark ? "text-gray-500" : "text-gray-400"}`}>
-                Owner
+                {adminUser.role || 'Owner'}
               </span>
             </div>
             <IconChevronDown size={14} className={`transition-transform duration-300 ${showProfile ? "rotate-180" : ""} ${isDark ? "text-gray-600" : "text-gray-400"}`} />
@@ -246,8 +267,8 @@ export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, o
                     AD
                   </div>
                   <div className="flex flex-col">
-                    <p className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Sarah J.</p>
-                    <p className="text-[11px] font-medium text-gray-500">sarah.j@elektro.com</p>
+                    <p className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Admin.</p>
+                    <p className="text-[11px] font-medium text-gray-500">.admin@elekyo.com</p>
                   </div>
                 </div>
               </div>
@@ -303,6 +324,15 @@ export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, o
           }}
         ></div>
       )}
+
+      <Modal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        type={confirmModal.type}
+      />
     </div>
   )
 }
