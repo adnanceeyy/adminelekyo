@@ -7,7 +7,7 @@ const API_CONFIG = {
   // Helper to get full URL for images/assets
   getAssetUrl: (path) => {
     if (!path) return null;
-    if (path.startsWith('http')) return path;
+    if (path.startsWith('http') || path.startsWith('data:image')) return path;
     const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
     return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
   },
