@@ -3,6 +3,7 @@ import ProductService from '../services/product.service';
 import CategoryService from '../services/category.service';
 import API_CONFIG from '../config/api.config';
 import { toast } from 'react-hot-toast';
+import Modal from '../components/Modal';
 import {
   IconPlus,
   IconSearch,
@@ -20,6 +21,15 @@ export default function Products({ isDark, onNavigate }) {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+
+  // Custom Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => { },
+    type: 'danger'
+  });
 
   // Fetch products from backend on component mount
   useEffect(() => {
@@ -44,9 +54,17 @@ export default function Products({ isDark, onNavigate }) {
     }
   };
 
-  const handleDeleteProduct = async (productId) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+  const handleDeleteProduct = (productId, productName) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Product',
+      message: `Are you sure you want to delete "${productName}"? This action cannot be undone.`,
+      type: 'danger',
+      onConfirm: () => executeDelete(productId)
+    });
+  };
 
+  const executeDelete = async (productId) => {
     try {
       await ProductService.deleteProduct(productId);
       // Remove from UI
@@ -250,7 +268,7 @@ export default function Products({ isDark, onNavigate }) {
                               <IconEdit size={18} stroke={2} />
                             </button>
                             <button
-                              onClick={() => handleDeleteProduct(product._id || product.id)}
+                              onClick={() => handleDeleteProduct(product._id || product.id, product.name)}
                               className={`p-2 rounded-lg transition-all ${isDark ? "hover:bg-rose-500/10 text-gray-500 hover:text-rose-400" : "hover:bg-rose-50 text-gray-400 hover:text-rose-600"}`}>
                               <IconTrash size={18} stroke={2} />
                             </button>
@@ -265,6 +283,17 @@ export default function Products({ isDark, onNavigate }) {
           )}
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      <Modal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type={confirmModal.type}
+        isDark={isDark}
+      />
     </div>
   );
 }

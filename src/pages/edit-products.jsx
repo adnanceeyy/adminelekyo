@@ -15,6 +15,7 @@ import ProductService from '../services/product.service';
 import CategoryService from '../services/category.service';
 import API_CONFIG from '../config/api.config';
 import { toast } from 'react-hot-toast';
+import Modal from '../components/Modal';
 
 export default function EditProducts({ isDark }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,6 +26,15 @@ export default function EditProducts({ isDark }) {
   const [formData, setFormData] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+
+  // Custom Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => { },
+    type: 'danger'
+  });
 
   useEffect(() => {
     fetchInitialData();
@@ -63,18 +73,7 @@ export default function EditProducts({ isDark }) {
 
   const handleSave = async () => {
     try {
-      // Map back to backend structure if needed (already in structure)
-      // Send update
-      const idToUpdate = formData.id; // numeric id
-      // OR use _id. The route supports both. Let's use numeric ID if available, else _id.
-      // Actually my route update implementation checks idParam as numeric first.
-      // But wait, the route `router.put("/:id")` -> `findProduct(req.params.id)`.
-      // If I pass `_id`, it works. If I pass `id` (numeric), it works.
-      // Let's use `_id` as the param to be safe if `id` is somehow duplicate or missing (though it shouldn't be).
-      // Actually `formData` has `_id`.
-
       await ProductService.updateProduct(formData._id || formData.id, formData);
-
       setProducts(products.map(p => p._id === editingId ? { ...formData } : p));
       setEditingId(null);
       setFormData({});
@@ -84,10 +83,18 @@ export default function EditProducts({ isDark }) {
     }
   };
 
-  const handleDelete = async (product) => {
-    if (!window.confirm(`Are you sure you want to delete "${product.name}"?`)) return;
+  const handleDelete = (product) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Product',
+      message: `Are you sure you want to delete "${product.name}"? This action cannot be undone.`,
+      type: 'danger',
+      onConfirm: () => executeDelete(product)
+    });
+  };
+
+  const executeDelete = async (product) => {
     try {
-      // Use _id or id.
       await ProductService.deleteProduct(product._id || product.id);
       setProducts(products.filter(p => p._id !== product._id));
       toast.success('Product deleted successfully');
@@ -334,6 +341,17 @@ export default function EditProducts({ isDark }) {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      <Modal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type={confirmModal.type}
+        isDark={isDark}
+      />
     </div>
   );
 }

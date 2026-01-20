@@ -1,18 +1,31 @@
 import { useState, useEffect } from 'react';
-import { IconEdit, IconTrash, IconPlus, IconX, IconLoader } from '@tabler/icons-react';
+import { IconEdit, IconTrash, IconPlus, IconX, IconLoader, IconCloudUpload } from '@tabler/icons-react';
 import CategoryService from '../services/category.service';
+import API_CONFIG from '../config/api.config';
 import { toast } from 'react-hot-toast';
+import Modal from '../components/Modal';
 
 export default function ProductCategory({ isDark }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
+
+  // Custom Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => { },
+    type: 'danger'
+  });
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     color: 'blue',
-    icon: '📦'
+    icon: '📦',
+    image: ''
   });
 
   const colors = ['blue', 'indigo', 'purple', 'rose', 'emerald', 'amber', 'cyan', 'slate'];
@@ -38,7 +51,8 @@ export default function ProductCategory({ isDark }) {
       name: '',
       description: '',
       color: 'blue',
-      icon: '📦'
+      icon: '📦',
+      image: ''
     });
     setEditingCategory(null);
   };
@@ -50,12 +64,28 @@ export default function ProductCategory({ isDark }) {
         name: category.name,
         description: category.description,
         color: category.color || 'blue',
-        icon: category.icon || '📦'
+        icon: category.icon || '📦',
+        image: category.image || ''
       });
     } else {
       resetForm();
     }
     setIsModalOpen(true);
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("Image too large. Max 2MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setFormData(prev => ({ ...prev, image: event.target.result }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -76,8 +106,17 @@ export default function ProductCategory({ isDark }) {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this category?')) return;
+  const handleDeleteClick = (category) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Category',
+      message: `Are you sure you want to delete "${category.name}"? All related products will remain but will be uncategorized.`,
+      type: 'danger',
+      onConfirm: () => executeDelete(category._id)
+    });
+  };
+
+  const executeDelete = async (id) => {
     try {
       await CategoryService.deleteCategory(id);
       toast.success('Category deleted successfully');
@@ -142,8 +181,12 @@ export default function ProductCategory({ isDark }) {
                     <tr key={category._id} className={`group transition-all duration-200 ${isDark ? "hover:bg-gray-800/30" : "hover:bg-gray-50/50"}`}>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
-                            {category.icon || '📦'}
+                          <div className={`w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center text-lg ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
+                            {category.image ? (
+                              <img src={API_CONFIG.getAssetUrl(category.image)} className="w-full h-full object-cover" />
+                            ) : (
+                              category.icon || '📦'
+                            )}
                           </div>
                           <span className={`text-sm font-bold ${isDark ? "text-gray-200" : "text-gray-800"}`}>{category.name}</span>
                         </div>
@@ -165,7 +208,7 @@ export default function ProductCategory({ isDark }) {
                             <IconEdit size={18} />
                           </button>
                           <button
-                            onClick={() => handleDelete(category._id)}
+                            onClick={() => handleDeleteClick(category)}
                             className={`p-1.5 rounded-lg transition-all ${isDark ? "text-rose-400 hover:bg-rose-500/10" : "text-rose-600 hover:bg-rose-50"}`}
                           >
                             <IconTrash size={18} />
@@ -235,7 +278,7 @@ export default function ProductCategory({ isDark }) {
                   </select>
                 </div>
                 <div>
-                  <label className={`block text-xs font-bold mb-1.5 ${isDark ? "text-gray-400" : "text-gray-600"}`}>Icon (Emoji)</label>
+                  <label className={`block text-xs font-bold mb-1.5 ${isDark ? "text-gray-400" : "text-gray-600"}`}>Default Icon</label>
                   <input
                     type="text"
                     value={formData.icon}
@@ -243,6 +286,32 @@ export default function ProductCategory({ isDark }) {
                     className={`w-full px-4 py-2.5 rounded-xl text-sm font-medium border focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
                     placeholder="e.g. 💻"
                   />
+                </div>
+              </div>
+
+              <div>
+                <label className={`block text-xs font-bold mb-1.5 ${isDark ? "text-gray-400" : "text-gray-600"}`}>Cover Image</label>
+                <div className="flex items-center gap-4">
+                  <div className={`w-16 h-16 rounded-2xl border-2 border-dashed flex items-center justify-center overflow-hidden shrink-0 ${isDark ? "border-gray-800 bg-gray-950" : "border-gray-200 bg-gray-50"}`}>
+                    {formData.image ? (
+                      <img src={formData.image} className="w-full h-full object-cover" />
+                    ) : (
+                      <IconCloudUpload size={24} className="text-gray-500" />
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    id="cat-image"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                  />
+                  <label
+                    htmlFor="cat-image"
+                    className="flex-1 py-3 px-4 border border-dashed rounded-xl text-xs font-bold text-blue-500 hover:bg-blue-500/5 cursor-pointer text-center"
+                  >
+                    {formData.image ? 'Change Cover Image' : 'Upload Cover Image'}
+                  </label>
                 </div>
               </div>
 
@@ -265,6 +334,17 @@ export default function ProductCategory({ isDark }) {
           </div>
         </div>
       )}
+
+      {/* Confirmation Modal */}
+      <Modal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type={confirmModal.type}
+        isDark={isDark}
+      />
     </div>
   );
 }
