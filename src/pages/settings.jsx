@@ -13,6 +13,8 @@ import {
   IconChevronRight
 } from '@tabler/icons-react';
 import React, { useState } from 'react';
+import apiService from '../services/api.service';
+import { toast } from 'react-hot-toast';
 
 export default function Settings({ isDark }) {
   const [settings, setSettings] = useState({
@@ -150,6 +152,36 @@ export default function Settings({ isDark }) {
                     <IconChevronRight size={18} />
                   </button>
                 </div>
+              </div>
+            </section>
+
+            {/* Dev Options */}
+            <section>
+              <SectionHeader
+                icon={IconShieldCheck}
+                title="Developer Access"
+                description="Fix permissions and roles."
+              />
+              <div className={`p-4 rounded-[32px] border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
+                <button
+                  onClick={async () => {
+                    if (!confirm("Promote your account to Admin?")) return;
+                    try {
+                      const res = await apiService.post('/users/promote-me', {});
+                      if (res.success) {
+                        localStorage.setItem('adminToken', res.token);
+                        toast.success('Promoted to Admin! Reloading...');
+                        setTimeout(() => window.location.reload(), 1500);
+                      }
+                    } catch (e) {
+                      toast.error('Failed: ' + e.message);
+                    }
+                  }}
+                  className="w-full py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-500 transition-colors"
+                >
+                  Fix "Admin Access Only" Error
+                </button>
+                <p className="text-xs text-gray-500 mt-2 text-center">Click this if you cannot add/edit products.</p>
               </div>
             </section>
           </div>
