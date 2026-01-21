@@ -35,6 +35,7 @@ export default function NewProducts({ isDark }) {
     mrp: '',
     offerPrice: '',
     image: null,
+    images: [], // Array of additional images
     stock: '',
     rating: '',
     description: '',
@@ -65,22 +66,36 @@ export default function NewProducts({ isDark }) {
     }));
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit check
-        toast.error("Image too large. Please use an image under 5MB.");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setFormData(prev => ({
-          ...prev,
-          image: event.target.result
-        }));
-      };
-      reader.readAsDataURL(file);
+  const handleImageChange = (e, type = 'main') => {
+    const files = e.target.files;
+    if (files.length > 0) {
+      Array.from(files).forEach(file => {
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error(`${file.name} is too large (>5MB)`);
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (type === 'main') {
+            setFormData(prev => ({ ...prev, image: event.target.result }));
+          } else {
+            setFormData(prev => ({
+              ...prev,
+              images: [...prev.images, event.target.result]
+            }));
+          }
+        };
+        reader.readAsDataURL(file);
+      });
     }
+  };
+
+  const removeAdditionalImage = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -96,13 +111,14 @@ export default function NewProducts({ isDark }) {
 
       const productPayload = {
         name: formData.productName,
-        productDetailedName: formData.productName, // Can be same for now
+        productDetailedName: formData.productName,
         description: formData.description || 'No description provided.',
         price: Number(formData.offerPrice),
         mrPrice: Number(formData.mrp),
         countInStock: Number(formData.stock),
         productRating: Number(formData.rating) || 0,
         image: formData.image,
+        images: formData.images, // Include the array of images
         category: formData.category,
         brand: formData.brand,
         model: formData.model,
@@ -127,6 +143,7 @@ export default function NewProducts({ isDark }) {
       mrp: '',
       offerPrice: '',
       image: null,
+      images: [],
       stock: '',
       rating: '',
       description: '',
@@ -178,7 +195,7 @@ export default function NewProducts({ isDark }) {
             <div className="space-y-8">
               <FormSection title="Visual Asset" icon={IconPhoto} colorClass="bg-purple-500 text-white shadow-lg shadow-purple-500/20" isDark={isDark}>
                 <div className="relative">
-                  <input type="file" className="hidden" id="main-image" onChange={handleImageChange} accept="image/*" />
+                  <input type="file" className="hidden" id="main-image" onChange={(e) => handleImageChange(e, 'main')} accept="image/*" />
                   <label htmlFor="main-image" className={`group flex flex-col items-center justify-center min-h-[340px] border-2 border-dashed rounded-[40px] cursor-pointer transition-all duration-300 ${formData.image
                     ? "border-emerald-500/50 bg-emerald-500/5"
                     : isDark ? "border-gray-800 bg-gray-950/50 hover:border-blue-500/40 hover:bg-blue-500/5" : "border-gray-200 bg-gray-50 hover:border-blue-500/40"
@@ -200,6 +217,40 @@ export default function NewProducts({ isDark }) {
                       </div>
                     )}
                   </label>
+                </div>
+              </FormSection>
+
+              <FormSection title="Additional Gallery" icon={IconPhoto} colorClass="bg-pink-500 text-white shadow-lg shadow-pink-500/20" isDark={isDark}>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    {formData.images.map((img, index) => (
+                      <div key={index} className="relative aspect-square rounded-2xl overflow-hidden border border-gray-100 group">
+                        <img src={img} alt={`Gallery ${index}`} className="w-full h-full object-cover" />
+                        <button
+                          onClick={(e) => { e.preventDefault(); removeAdditionalImage(index); }}
+                          className="absolute top-2 right-2 p-1.5 bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity transform hover:scale-110"
+                        >
+                          <IconX size={12} />
+                        </button>
+                      </div>
+                    ))}
+                    <input
+                      type="file"
+                      className="hidden"
+                      id="additional-images"
+                      multiple
+                      onChange={(e) => handleImageChange(e, 'additional')}
+                      accept="image/*"
+                    />
+                    <label
+                      htmlFor="additional-images"
+                      className={`aspect-square flex flex-col items-center justify-center border-2 border-dashed rounded-2xl cursor-pointer transition-all ${isDark ? "border-gray-800 bg-gray-900/50 hover:border-pink-500/40" : "border-gray-200 bg-gray-50 hover:border-pink-500/40"
+                        }`}
+                    >
+                      <IconPlus size={24} className="text-gray-400" />
+                      <span className="text-[8px] font-black uppercase tracking-widest text-gray-500 mt-2">Add More</span>
+                    </label>
+                  </div>
                 </div>
               </FormSection>
 

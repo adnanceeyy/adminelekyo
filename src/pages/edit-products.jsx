@@ -7,6 +7,7 @@ import {
   IconPackage,
   IconAdjustmentsHorizontal,
   IconX,
+  IconPlus,
   IconCheck,
   IconLoader
 } from '@tabler/icons-react';
@@ -113,6 +114,38 @@ export default function EditProducts({ isDark }) {
     }));
   };
 
+  const handleImageChange = (e, type = 'main') => {
+    const files = e.target.files;
+    if (files.length > 0) {
+      Array.from(files).forEach(file => {
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error(`${file.name} is too large (>5MB)`);
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (type === 'main') {
+            setFormData(prev => ({ ...prev, image: event.target.result }));
+          } else {
+            setFormData(prev => ({
+              ...prev,
+              images: [...(prev.images || []), event.target.result]
+            }));
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removeAdditionalImage = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
+
   return (
     <div className={`flex-1 flex flex-col h-full overflow-hidden ${isDark ? "bg-gray-950" : "bg-[#f8fafc]"}`}>
       {/* Header */}
@@ -181,13 +214,43 @@ export default function EditProducts({ isDark }) {
                         </td>
                         <td className="px-8 py-6">
                           {editingId === product._id ? (
-                            <input
-                              type="text"
-                              name="name"
-                              value={formData.name}
-                              onChange={handleInputChange}
-                              className={`w-full px-3 py-2 rounded-lg text-sm font-black border ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
-                            />
+                            <div className="space-y-4">
+                              <div className="flex items-center gap-3">
+                                <div className="relative group/main">
+                                  <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden border border-gray-200">
+                                    <img src={formData.image?.startsWith('data') ? formData.image : API_CONFIG.getAssetUrl(formData.image)} className="w-full h-full object-cover" />
+                                  </div>
+                                  <input type="file" className="hidden" id="edit-main-image" onChange={(e) => handleImageChange(e, 'main')} accept="image/*" />
+                                  <label htmlFor="edit-main-image" className="absolute inset-0 bg-black/40 opacity-0 group-hover/main:opacity-100 flex items-center justify-center cursor-pointer transition-opacity rounded-xl">
+                                    <IconEdit size={14} className="text-white" />
+                                  </label>
+                                </div>
+                                <input
+                                  type="text"
+                                  name="name"
+                                  value={formData.name}
+                                  onChange={handleInputChange}
+                                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-black border ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
+                                />
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {(formData.images || []).map((img, idx) => (
+                                  <div key={idx} className="relative w-8 h-8 rounded-lg overflow-hidden border border-gray-100 group">
+                                    <img src={img?.startsWith('data') ? img : API_CONFIG.getAssetUrl(img)} className="w-full h-full object-cover" />
+                                    <button
+                                      onClick={() => removeAdditionalImage(idx)}
+                                      className="absolute inset-0 bg-rose-500/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                                    >
+                                      <IconX size={10} className="text-white" />
+                                    </button>
+                                  </div>
+                                ))}
+                                <input type="file" className="hidden" id="edit-more-images" onChange={(e) => handleImageChange(e, 'additional')} multiple accept="image/*" />
+                                <label htmlFor="edit-more-images" className="w-8 h-8 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-blue-500 transition-colors">
+                                  <IconPlus size={14} className="text-gray-400" />
+                                </label>
+                              </div>
+                            </div>
                           ) : (
                             <div className="flex items-center gap-3">
                               <div className={`w-10 h-10 rounded-xl bg-linear-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white overflow-hidden shadow-lg shadow-blue-500/10`}>
@@ -201,6 +264,9 @@ export default function EditProducts({ isDark }) {
                                 <p className={`text-sm font-black truncate ${isDark ? "text-gray-200" : "text-gray-900"}`}>{product.name}</p>
                                 <div className="flex items-center gap-1 mt-0.5">
                                   <span className="text-[10px] text-amber-500 font-black">★ {product.productRating || 0}</span>
+                                  {(product.images?.length > 0) && (
+                                    <span className={`text-[8px] font-black px-1 rounded ${isDark ? "bg-gray-800 text-gray-400" : "bg-gray-100 text-gray-500"}`}>+{product.images.length} images</span>
+                                  )}
                                 </div>
                               </div>
                             </div>
