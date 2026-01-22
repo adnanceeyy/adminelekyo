@@ -8,6 +8,8 @@ const apiClient = axios.create({
   headers: API_CONFIG.HEADERS,
 });
 
+console.log('🔧 API Client initialized with base URL:', API_CONFIG.BASE_URL);
+
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
@@ -41,9 +43,13 @@ const ApiService = {
   // GET request
   get: async (url, config = {}) => {
     try {
+      console.log(`🌐 API GET: ${url}`);
       const response = await apiClient.get(url, config);
+      console.log(`✅ API Response for ${url}:`, response.data);
       return response.data;
     } catch (error) {
+      console.error(`❌ API Error for ${url}:`, error);
+      console.error('Error response:', error.response);
       throw error.response?.data || error.message;
     }
   },

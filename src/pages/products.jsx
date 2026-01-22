@@ -39,16 +39,25 @@ export default function Products({ isDark, onNavigate }) {
   const fetchProducts = async () => {
     try {
       setLoading(true);
+      console.log('🔄 Fetching products from API...');
       const [productsData, categoriesData] = await Promise.all([
         ProductService.getAllProducts(),
         CategoryService.getAllCategories()
       ]);
+      console.log('✅ Products received:', productsData);
+      console.log('📊 Total products:', productsData?.length || 0);
+      console.log('📂 Categories received:', categoriesData);
       setProducts(productsData);
       setCategories(categoriesData);
       setError(null);
     } catch (err) {
+      console.error('❌ Error fetching products:', err);
+      console.error('Error details:', {
+        message: err.message,
+        response: err.response,
+        data: err.data
+      });
       setError(err.message || 'Failed to fetch products');
-      console.error('Error fetching products:', err);
     } finally {
       setLoading(false);
     }
