@@ -14,6 +14,7 @@ import {
 import React, { useState, useEffect } from 'react';
 import ProductService from '../services/product.service';
 import CategoryService from '../services/category.service';
+import VariantGroupService from '../services/variantGroup.service';
 import API_CONFIG from '../config/api.config';
 import { toast } from 'react-hot-toast';
 import Modal from '../components/Modal';
@@ -22,6 +23,7 @@ export default function EditProducts({ isDark }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({});
@@ -44,12 +46,14 @@ export default function EditProducts({ isDark }) {
   const fetchInitialData = async () => {
     try {
       setLoading(true);
-      const [productsData, categoriesData] = await Promise.all([
+      const [productsData, categoriesData, groupsData] = await Promise.all([
         ProductService.getAllProducts(),
-        CategoryService.getAllCategories()
+        CategoryService.getAllCategories(),
+        VariantGroupService.getAllGroups()
       ]);
       setProducts(productsData);
       setCategories(categoriesData);
+      setGroups(groupsData);
     } catch (err) {
       toast.error(err.message || 'Failed to fetch data');
     } finally {
@@ -190,6 +194,7 @@ export default function EditProducts({ isDark }) {
                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">ID</th>
                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Master Item</th>
                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Category</th>
+                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Variant Group</th>
                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Stock</th>
                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Pricing</th>
                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 text-right">Actions</th>
@@ -215,23 +220,56 @@ export default function EditProducts({ isDark }) {
                         <td className="px-8 py-6">
                           {editingId === product._id ? (
                             <div className="space-y-4">
-                              <div className="flex items-center gap-3">
-                                <div className="relative group/main">
-                                  <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden border border-gray-200">
-                                    <img src={formData.image?.startsWith('data') ? formData.image : API_CONFIG.getAssetUrl(formData.image)} className="w-full h-full object-cover" />
+                              <div className="flex items-start gap-4">
+                                <div className="space-y-3">
+                                  <div className="relative group/main">
+                                    <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden border border-gray-200">
+                                      <img src={formData.image?.startsWith('data') ? formData.image : API_CONFIG.getAssetUrl(formData.image)} className="w-full h-full object-cover" />
+                                    </div>
+                                    <input type="file" className="hidden" id="edit-main-image" onChange={(e) => handleImageChange(e, 'main')} accept="image/*" />
+                                    <label htmlFor="edit-main-image" className="absolute inset-0 bg-black/40 opacity-0 group-hover/main:opacity-100 flex items-center justify-center cursor-pointer transition-opacity rounded-xl">
+                                      <IconEdit size={14} className="text-white" />
+                                    </label>
                                   </div>
-                                  <input type="file" className="hidden" id="edit-main-image" onChange={(e) => handleImageChange(e, 'main')} accept="image/*" />
-                                  <label htmlFor="edit-main-image" className="absolute inset-0 bg-black/40 opacity-0 group-hover/main:opacity-100 flex items-center justify-center cursor-pointer transition-opacity rounded-xl">
-                                    <IconEdit size={14} className="text-white" />
-                                  </label>
+                                  {/* PREVIEW CARD */}
+                                  <div className="pt-2 border-t border-gray-100">
+                                    <div className={`w-20 flex flex-col items-center p-1.5 rounded-xl border border-gray-100 bg-white shadow-sm ring-4 ring-blue-500/5`}>
+                                      <div className="w-8 h-8 mb-1 flex items-center justify-center">
+                                        <img src={formData.image?.startsWith('data') ? formData.image : API_CONFIG.getAssetUrl(formData.image)} className="max-w-full max-h-full object-contain mix-blend-multiply" />
+                                      </div>
+                                      <div className="text-center w-full">
+                                        <div className="text-[7px] font-black uppercase truncate text-blue-600">
+                                          {formData.color || formData.model || (formData.name?.split(' ').pop()) || "Label"}
+                                        </div>
+                                        <div className="text-[7px] font-bold text-gray-900">₹{formData.price}</div>
+                                      </div>
+                                    </div>
+                                  </div>
                                 </div>
-                                <input
-                                  type="text"
-                                  name="name"
-                                  value={formData.name}
-                                  onChange={handleInputChange}
-                                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-black border ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
-                                />
+
+                                <div className="flex-1 space-y-3">
+                                  <div className="space-y-1">
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Display Name</label>
+                                    <input
+                                      type="text"
+                                      name="name"
+                                      value={formData.name}
+                                      onChange={handleInputChange}
+                                      className={`w-full px-3 py-1.5 rounded-lg text-xs font-black border ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Variant Label (Color/Spec)</label>
+                                    <input
+                                      type="text"
+                                      name="color"
+                                      value={formData.color || ''}
+                                      onChange={handleInputChange}
+                                      placeholder="e.g. 8GB/256GB"
+                                      className={`w-full px-3 py-1.5 rounded-lg text-xs font-black border ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
+                                    />
+                                  </div>
+                                </div>
                               </div>
                               <div className="flex flex-wrap gap-2">
                                 {(formData.images || []).map((img, idx) => (
@@ -291,6 +329,26 @@ export default function EditProducts({ isDark }) {
                             </span>
                           )}
                         </td>
+                        <td className="px-8 py-6">
+                          {editingId === product._id ? (
+                            <select
+                              name="variantGroup"
+                              value={formData.variantGroup || ''}
+                              onChange={handleInputChange}
+                              className={`w-full px-3 py-2 rounded-lg text-sm font-black border focus:ring-2 focus:ring-blue-500/20 focus:outline-none ${isDark ? "bg-gray-950 border-gray-800 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
+                            >
+                              <option value="">No Variant Group</option>
+                              {groups.map(grp => (
+                                <option key={grp._id} value={grp.name}>{grp.name}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className={`inline-flex px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${isDark ? "bg-indigo-900/40 text-indigo-400" : "bg-indigo-50 text-indigo-600"}`}>
+                              {product.variantGroup || 'None'}
+                            </span>
+                          )}
+                        </td>
+
                         <td className="px-8 py-6">
                           {editingId === product._id ? (
                             <input

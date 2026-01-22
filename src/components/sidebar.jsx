@@ -12,7 +12,8 @@ import {
   IconLayoutDashboard,
   IconSettings,
   IconPhoto,
-  IconReceipt
+  IconReceipt,
+  IconUsers
 } from '@tabler/icons-react'
 
 function NavItem({ icon: Icon, label, active = false, isDark = true, onClick, hasSubmenu = false, isExpanded = false }) {
@@ -71,31 +72,31 @@ export default function Sidebar({ isDark, sidebarOpen, currentPage, onNavigate }
 
   return (
     <div
-      className={`${sidebarOpen ? "w-72" : "w-0"
-        } border-r h-screen overflow-hidden flex flex-col transition-all duration-500 ease-in-out z-30 ${isDark ? "bg-gray-950 border-gray-900 shadow-2xl" : "bg-white border-gray-100 shadow-lg"
+      className={`${sidebarOpen ? "w-64" : "w-0"
+        } border-r h-screen overflow-hidden flex flex-col transition-all duration-300 ease-in-out z-30 ${isDark ? "bg-gray-950 border-gray-900 shadow-xl" : "bg-white border-gray-100 shadow-md"
         }`}
     >
-      <div className="w-72 h-screen p-6 flex flex-col">
+      <div className="w-64 h-screen flex flex-col p-4">
         {/* Brand Logo */}
-        <div className="mb-10 flex items-center gap-3 px-2">
-          <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <IconLayoutDashboard className="text-white" size={24} stroke={2.5} />
+        <div className="mb-8 flex items-center gap-3 px-2 pt-2">
+          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20 text-white">
+            <IconLayoutDashboard size={22} stroke={2} />
           </div>
           <div>
-            <h1 className={`text-xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <h1 className={`text-xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
               ELEK<span className="text-blue-500">YO</span>
             </h1>
-            <p className={`text-[10px] font-bold uppercase tracking-[0.2em] -mt-0.5 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-              Control Center
+            <p className={`text-xs font-medium opacity-60 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+              Admin Panel
             </p>
           </div>
         </div>
 
         {/* Navigation Items */}
-        <nav className="space-y-1.5 flex-1 overflow-y-auto scrollbar-hide pr-1">
-          <div className={`px-4 mb-4 text-[10px] font-bold uppercase tracking-widest ${isDark ? "text-gray-600" : "text-gray-400"}`}>
-            Main Menu
-          </div>
+        <nav className="space-y-1 flex-1 overflow-y-auto scrollbar-hide">
+          <p className={`px-4 mb-2 text-xs font-bold uppercase tracking-wider opacity-50 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+            Main
+          </p>
 
           <NavItem
             icon={IconHome}
@@ -113,12 +114,25 @@ export default function Sidebar({ isDark, sidebarOpen, currentPage, onNavigate }
             onClick={() => onNavigate('orders')}
           />
 
-          {/* Products Section */}
+          <NavItem
+            icon={IconUsers}
+            label="Customers"
+            active={currentPage === 'users'}
+            isDark={isDark}
+            onClick={() => onNavigate('users')}
+          />
+
+          <div className="pt-4 pb-2">
+            <p className={`px-4 text-xs font-bold uppercase tracking-wider opacity-50 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+              Inventory
+            </p>
+          </div>
+
           <div>
             <NavItem
               icon={IconShoppingCart}
-              label="Inventory"
-              active={currentPage?.startsWith('products') || currentPage === 'new-products' || currentPage === 'product-category'}
+              label="Products"
+              active={currentPage?.startsWith('products') || currentPage === 'new-products' || currentPage === 'product-category' || currentPage === 'variants'}
               isDark={isDark}
               onClick={() => toggleMenu('products')}
               hasSubmenu={true}
@@ -126,13 +140,13 @@ export default function Sidebar({ isDark, sidebarOpen, currentPage, onNavigate }
             />
             <div className={`overflow-hidden transition-all duration-300 ${expandedMenu === 'products' ? 'max-h-64 mt-1 opacity-100' : 'max-h-0 opacity-0'}`}>
               <SubNavItem
-                label="All Products"
+                label="Product List"
                 active={currentPage === 'products'}
                 isDark={isDark}
                 onClick={() => onNavigate('products')}
               />
               <SubNavItem
-                label="Add New"
+                label="Add Product"
                 active={currentPage === 'new-products'}
                 isDark={isDark}
                 onClick={() => onNavigate('new-products')}
@@ -143,7 +157,19 @@ export default function Sidebar({ isDark, sidebarOpen, currentPage, onNavigate }
                 isDark={isDark}
                 onClick={() => onNavigate('product-category')}
               />
+              <SubNavItem
+                label="Variants"
+                active={currentPage === 'variants'}
+                isDark={isDark}
+                onClick={() => onNavigate('variants')}
+              />
             </div>
+          </div>
+
+          <div className="pt-4 pb-2">
+            <p className={`px-4 text-xs font-bold uppercase tracking-wider opacity-50 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+              System
+            </p>
           </div>
 
           <NavItem
@@ -154,13 +180,9 @@ export default function Sidebar({ isDark, sidebarOpen, currentPage, onNavigate }
             onClick={() => onNavigate('promotions')}
           />
 
-          <div className={`px-4 py-4 mt-4 text-[10px] font-bold uppercase tracking-widest ${isDark ? "text-gray-600" : "text-gray-400"}`}>
-            Configure
-          </div>
-
           <NavItem
             icon={IconSettings}
-            label="Site Settings"
+            label="Settings"
             active={currentPage === 'settings'}
             isDark={isDark}
             onClick={() => onNavigate('settings')}
@@ -168,14 +190,14 @@ export default function Sidebar({ isDark, sidebarOpen, currentPage, onNavigate }
         </nav>
 
         {/* Footer Actions */}
-        <div className={`mt-auto border-t pt-6 ${isDark ? "border-gray-900" : "border-gray-100"}`}>
+        <div className={`mt-auto border-t pt-4 ${isDark ? "border-gray-800" : "border-gray-100"}`}>
           <div
             onClick={() => onNavigate('logout')}
-            className={`group flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 ${isDark ? "hover:bg-red-500/10 text-gray-500 hover:text-red-400" : "hover:bg-red-50 text-gray-500 hover:text-red-600"
+            className={`group flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 ${isDark ? "hover:bg-red-500/10 text-gray-400 hover:text-red-400" : "hover:bg-red-50 text-gray-600 hover:text-red-600"
               }`}
           >
-            <IconLogout size={20} className="transition-transform group-hover:-translate-x-1" />
-            <span className="text-sm font-bold">Log Out</span>
+            <IconLogout size={20} />
+            <span className="text-sm font-medium">Log Out</span>
           </div>
         </div>
       </div>

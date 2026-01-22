@@ -104,7 +104,7 @@ export default function Products({ isDark, onNavigate }) {
             Inventory
           </h2>
           <p className={`text-sm mt-1 font-medium ${isDark ? "text-gray-500" : "text-gray-500"}`}>
-            Track levels and manage your {products.length} listed products.
+            Manage your product catalog and stock levels.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -117,7 +117,7 @@ export default function Products({ isDark, onNavigate }) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto scrollbar-hide p-6">
+      <div className="flex-1 overflow-y-auto scrollbar-hide p-8">
 
 
         {/* Filters & Actions Bar */}
@@ -130,7 +130,7 @@ export default function Products({ isDark, onNavigate }) {
               placeholder="Filter by name, ID or category..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full pl-11 pr-4 py-2 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/10 ${isDark ? "bg-gray-950/50 border-gray-800 text-gray-200 placeholder-gray-600 focus:bg-gray-950" : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white"
+              className={`w-full pl-11 pr-4 py-2.5 rounded-xl text-sm font-medium transition-all focus:outline-none focus:ring-4 focus:ring-blue-500/10 ${isDark ? "bg-gray-950/50 border-gray-800 text-gray-200 placeholder-gray-600 focus:bg-gray-950" : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white"
                 }`}
             />
           </div>
@@ -138,7 +138,7 @@ export default function Products({ isDark, onNavigate }) {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className={`px-4 py-2 rounded-xl text-sm font-bold border focus:outline-none focus:ring-2 focus:ring-blue-500/10 ${isDark ? "bg-gray-950 border-gray-800 text-gray-200" : "bg-white border-gray-200 text-gray-700"}`}
+              className={`px-4 py-2.5 rounded-xl text-sm font-bold border focus:outline-none focus:ring-2 focus:ring-blue-500/10 ${isDark ? "bg-gray-950 border-gray-800 text-gray-200" : "bg-white border-gray-200 text-gray-700"}`}
             >
               <option value="All">All Categories</option>
               {categories.map(cat => (
@@ -155,8 +155,8 @@ export default function Products({ isDark, onNavigate }) {
           {loading && (
             <div className="flex items-center justify-center py-20">
               <div className="flex flex-col items-center gap-4">
-                <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-                <p className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>Loading products...</p>
+                <div className="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+                <p className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>Loading products...</p>
               </div>
             </div>
           )}
@@ -182,7 +182,7 @@ export default function Products({ isDark, onNavigate }) {
             <div className="flex items-center justify-center py-20">
               <div className="text-center">
                 <IconPackage size={48} className={`mx-auto mb-4 ${isDark ? "text-gray-700" : "text-gray-300"}`} />
-                <p className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                <p className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                   {searchQuery ? 'No products found matching your search' : 'No products available'}
                 </p>
               </div>
@@ -194,7 +194,7 @@ export default function Products({ isDark, onNavigate }) {
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className={`${isDark ? "bg-gray-950/40 text-gray-500" : "bg-gray-50/50 text-gray-400"} text-xs font-bold`}>
+                  <tr className={`${isDark ? "bg-gray-950/40 text-gray-500" : "bg-gray-50/50 text-gray-500"} text-xs font-bold uppercase tracking-wider`}>
                     <th className="px-6 py-5">Product</th>
                     <th className="px-6 py-5">ID</th>
                     <th className="px-6 py-5">Stock</th>
@@ -213,7 +213,7 @@ export default function Products({ isDark, onNavigate }) {
                     };
 
                     return (
-                      <tr key={product._id || i} className={`group transition-all duration-300 ${isDark ? "hover:bg-gray-800/40" : "hover:bg-gray-50/70"}`}>
+                      <tr key={product._id || i} className={`group transition-all duration-300 ${isDark ? "hover:bg-gray-800/40" : "hover:bg-gray-50"}`}>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-4">
                             <div className={`w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden shadow-inner ${isDark ? "bg-gray-800/80" : "bg-gray-100"
@@ -226,12 +226,12 @@ export default function Products({ isDark, onNavigate }) {
                             </div>
                             <div className="flex flex-col">
                               <span className={`text-sm font-bold ${isDark ? "text-gray-200" : "text-gray-800"}`}>{product.name}</span>
-                              <span className="text-[11px] font-bold text-blue-500 uppercase tracking-tighter">{product.category || 'Uncategorized'}</span>
+                              <span className="text-xs font-bold text-blue-500 uppercase tracking-wide mt-0.5">{product.category || 'Uncategorized'}</span>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`text-xs font-mono font-bold ${isDark ? "text-gray-500" : "text-gray-400"}`}>#{product.id || product._id?.substring(0, 8)}</span>
+                          <span className={`text-xs font-mono font-medium ${isDark ? "text-gray-500" : "text-gray-400"}`}>#{product.id || product._id?.substring(0, 8)}</span>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-col gap-1.5 w-32">

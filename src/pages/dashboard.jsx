@@ -75,9 +75,9 @@ const CustomTooltip = ({ active, payload, label, isDark }) => {
 export default function Dashboard({ isDark, onNavigate }) {
   const [stats, setStats] = useState([
     { title: "Revenue", value: "₹0", change: "+0%", isPositive: true, icon: IconTrendingUp, color: "blue" },
-    { title: "Orders", value: "0", change: "+0%", isPositive: true, icon: IconShoppingCart, color: "emerald" },
-    { title: "Customers", value: "0", change: "+0%", isPositive: true, icon: IconUsers, color: "purple" },
-    { title: "Pending", value: "0", change: "0%", isPositive: false, icon: IconClock, color: "orange" },
+    { title: "Total Orders", value: "0", change: "+0%", isPositive: true, icon: IconShoppingCart, color: "emerald" },
+    { title: "Active Users", value: "0", change: "+0%", isPositive: true, icon: IconUsers, color: "purple" },
+    { title: "Pending Orders", value: "0", change: "0%", isPositive: false, icon: IconClock, color: "orange" },
   ]);
   const [recentOrders, setRecentOrders] = useState([]);
   const [chartData, setChartData] = useState([]);
@@ -97,10 +97,10 @@ export default function Dashboard({ isDark, onNavigate }) {
       const pendingOrders = orders.filter(o => ['Pending', 'Processing', 'pending', 'processing'].includes(o.status)).length;
 
       setStats([
-        { title: "Revenue", value: `₹${totalRevenue.toLocaleString()}`, change: "Live", isPositive: true, icon: IconCurrencyRupee, color: "blue" },
-        { title: "Orders", value: orders.length.toString(), change: "Tactical", isPositive: true, icon: IconShoppingCart, color: "emerald" },
-        { title: "Users", value: users.length.toString(), change: "Syncing", isPositive: true, icon: IconUsers, color: "purple" },
-        { title: "Pending", value: pendingOrders.toString(), change: "Action", isPositive: pendingOrders > 0, icon: IconClock, color: "orange" },
+        { title: "Total Revenue", value: `₹${totalRevenue.toLocaleString()}`, change: "Live", isPositive: true, icon: IconCurrencyRupee, color: "blue" },
+        { title: "Total Orders", value: orders.length.toString(), change: "All time", isPositive: true, icon: IconShoppingCart, color: "emerald" },
+        { title: "Active Users", value: users.length.toString(), change: "Registered", isPositive: true, icon: IconUsers, color: "purple" },
+        { title: "Pending Orders", value: pendingOrders.toString(), change: "Needs Action", isPositive: pendingOrders > 0, icon: IconClock, color: "orange" },
       ]);
 
       const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -136,26 +136,26 @@ export default function Dashboard({ isDark, onNavigate }) {
 
   return (
     <div className={`flex-1 flex flex-col h-full overflow-hidden ${isDark ? "bg-gray-950" : "bg-[#f8fafc]"}`}>
-      <div className={`px-6 py-4 border-b flex items-center justify-between ${isDark ? "bg-gray-950 border-gray-900" : "bg-white border-gray-100"}`}>
+      <div className={`px-8 py-6 border-b flex items-center justify-between ${isDark ? "bg-gray-950 border-gray-900" : "bg-white border-gray-100"}`}>
         <div>
-          <h2 className={`text-xl font-black uppercase tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>Dashboard</h2>
-          <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest leading-none mt-1">Operational Protocol v2.0</p>
+          <h2 className={`text-2xl font-bold tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>Dashboard Overview</h2>
+          <p className="text-sm font-medium text-gray-500 mt-1">Welcome back to your control panel.</p>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto scrollbar-hide p-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="flex-1 overflow-y-auto scrollbar-hide p-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, i) => (
             <StatCard key={i} {...stat} isDark={isDark} />
           ))}
         </div>
 
-        <div className={`mb-6 p-6 rounded-[32px] border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-white shadow-sm"}`}>
-          <div className="flex items-center justify-between mb-6">
-            <h3 className={`text-sm font-black uppercase tracking-widest ${isDark ? "text-white" : "text-gray-900"}`}>Analytics</h3>
-            <span className="text-[9px] font-black text-gray-400 bg-gray-100/5 px-3 py-1 rounded-full border border-gray-200/10">7D STREAM</span>
+        <div className={`mb-8 p-6 rounded-3xl border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
+          <div className="flex items-center justify-between mb-8">
+            <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Revenue Analytics</h3>
+            <span className={`text-xs font-bold px-3 py-1 rounded-full ${isDark ? "bg-gray-800 text-gray-400" : "bg-gray-100 text-gray-600"}`}>Last 7 Days</span>
           </div>
-          <div className="h-[280px] w-full">
+          <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData}>
                 <defs>
@@ -165,8 +165,8 @@ export default function Dashboard({ isDark, onNavigate }) {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? "#1f2937" : "#f1f5f9"} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: 900 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: 900 }} tickFormatter={(value) => `₹${value >= 1000 ? (value / 1000).toFixed(0) + 'K' : value}`} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }} tickFormatter={(value) => `₹${value >= 1000 ? (value / 1000).toFixed(0) + 'K' : value}`} />
                 <Tooltip content={<CustomTooltip isDark={isDark} />} />
                 <Area type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={3} fill="url(#colorRev)" />
               </AreaChart>
@@ -174,36 +174,36 @@ export default function Dashboard({ isDark, onNavigate }) {
           </div>
         </div>
 
-        <div className={`rounded-[32px] border overflow-hidden ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-white shadow-sm"}`}>
-          <div className="px-6 py-4 border-b border-gray-100/5 flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Recent Stream</span>
-            <button onClick={() => onNavigate('orders')} className="text-[9px] font-black text-blue-500 uppercase tracking-widest hover:underline">Full Manifest</button>
+        <div className={`rounded-3xl border overflow-hidden ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
+          <div className="px-8 py-6 border-b border-gray-100/10 flex items-center justify-between">
+            <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Recent Orders</h3>
+            <button onClick={() => onNavigate('orders')} className="text-sm font-bold text-blue-500 hover:text-blue-600 transition-colors">View All Orders</button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className={`${isDark ? "bg-gray-950/40" : "bg-gray-50/50"} text-[9px] font-black uppercase tracking-widest text-gray-500`}>
-                  <th className="px-6 py-3">Ref</th>
-                  <th className="px-6 py-3">Entity</th>
-                  <th className="px-6 py-3 text-center">Status</th>
-                  <th className="px-6 py-3 text-right">Value</th>
+                <tr className={`${isDark ? "bg-gray-950/50" : "bg-gray-50"} text-xs font-bold uppercase tracking-wider text-gray-500`}>
+                  <th className="px-8 py-4">Order ID</th>
+                  <th className="px-8 py-4">Customer</th>
+                  <th className="px-8 py-4 text-center">Status</th>
+                  <th className="px-8 py-4 text-right">Amount</th>
                 </tr>
               </thead>
-              <tbody className={`divide-y ${isDark ? "divide-gray-800/50" : "divide-gray-100/50"}`}>
+              <tbody className={`divide-y ${isDark ? "divide-gray-800" : "divide-gray-100"}`}>
                 {recentOrders.map((order, i) => (
-                  <tr key={order._id || i} className="group transition-all">
-                    <td className="px-6 py-4 font-mono text-[9px] font-bold text-gray-500">#{(order._id || "").substring(0, 8).toUpperCase()}</td>
-                    <td className="px-6 py-4">
+                  <tr key={order._id || i} className={`group transition-colors ${isDark ? "hover:bg-gray-800/50" : "hover:bg-gray-50"}`}>
+                    <td className="px-8 py-4 font-mono text-xs font-medium text-gray-500">#{(order._id || "").substring(0, 8).toUpperCase()}</td>
+                    <td className="px-8 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-7 h-7 rounded-lg bg-blue-600/10 text-blue-600 flex items-center justify-center text-[10px] font-black">{order.customerDetails?.name?.charAt(0)}</div>
-                        <span className={`text-[11px] font-bold truncate max-w-[100px] ${isDark ? "text-gray-300" : "text-gray-900"}`}>{order.customerDetails?.name}</span>
+                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">{order.customerDetails?.name?.charAt(0)}</div>
+                        <span className={`text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-900"}`}>{order.customerDetails?.name}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tighter ${statusMap[order.status]?.bg || 'bg-gray-500/10'} ${statusMap[order.status]?.text || 'text-gray-500'}`}>{order.status}</span>
+                    <td className="px-8 py-4 text-center">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${statusMap[order.status]?.bg || 'bg-gray-100'} ${statusMap[order.status]?.text || 'text-gray-600'}`}>{order.status}</span>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <span className={`text-[11px] font-black ${isDark ? "text-white" : "text-gray-900"}`}>₹{(order.paymentSummary?.total || 0).toLocaleString()}</span>
+                    <td className="px-8 py-4 text-right">
+                      <span className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>₹{(order.paymentSummary?.total || 0).toLocaleString()}</span>
                     </td>
                   </tr>
                 ))}

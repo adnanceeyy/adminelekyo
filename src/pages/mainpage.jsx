@@ -10,6 +10,8 @@ import Promotions from "./promotions";
 import Profile from "./profile";
 import Settings from "./settings";
 import Orders from "./orders";
+import Variants from "./variants";
+
 
 import { useNavigate } from "react-router-dom";
 
@@ -82,7 +84,10 @@ export default function Mainpage() {
         return <Profile isDark={isDark} />;
       case "settings":
         return <Settings isDark={isDark} />;
+      case "variants":
+        return <Variants isDark={isDark} />;
       default:
+
         return <Dashboard isDark={isDark} onNavigate={handleNavigate} />;
     }
   };

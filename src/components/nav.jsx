@@ -146,7 +146,7 @@ export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, o
           {sidebarOpen ? <IconX size={20} /> : <IconMenu2 size={20} />}
         </button>
 
-        {/* Real Tactical Search Bar */}
+        {/* Real Tactical Search Bar -> Search Bar */}
         <div className="relative group hidden md:block">
           <IconSearch size={18} className={`absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors ${isDark ? "text-gray-600 group-focus-within:text-blue-500" : "text-gray-400 group-focus-within:text-blue-600"}`} />
           <input
@@ -158,25 +158,25 @@ export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, o
               setShowSearchResults(true);
             }}
             onFocus={() => setShowSearchResults(true)}
-            placeholder="Search commands (⌘K)"
-            className={`w-80 rounded-2xl pl-11 pr-12 py-3 text-[11px] font-black uppercase tracking-widest transition-all focus:outline-none focus:ring-4 focus:ring-blue-500/10 border ${isDark ? "bg-gray-900 border-gray-800 text-white placeholder-gray-700" : "bg-gray-50 border-transparent text-gray-900 placeholder-gray-400 focus:bg-white focus:border-blue-500/20 shadow-inner"}`}
+            placeholder="Search..."
+            className={`w-80 rounded-2xl pl-11 pr-12 py-2.5 text-sm font-medium transition-all focus:outline-none focus:ring-4 focus:ring-blue-500/10 border ${isDark ? "bg-gray-900 border-gray-800 text-white placeholder-gray-600" : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-blue-500/20"}`}
           />
           <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-40 pointer-events-none">
-            <IconCommand size={14} stroke={3} />
-            <span className="text-[10px] font-black">K</span>
+            <IconCommand size={14} stroke={2} />
+            <span className="text-xs font-bold">K</span>
           </div>
 
           {/* Search Result Dropdown */}
           {showSearchResults && searchQuery.length > 0 && (
-            <div className={`absolute left-0 mt-4 w-[400px] max-h-[480px] rounded-[32px] shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-300 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-white/50 backdrop-blur-xl"}`}>
-              <div className="p-4 bg-gray-50/50 border-b border-gray-100/10 flex items-center justify-between">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tactical Protocol Matches</span>
-                <span className="text-[10px] font-black text-blue-500">{filteredResults.length} Hits</span>
+            <div className={`absolute left-0 mt-4 w-[400px] max-h-[480px] rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100"}`}>
+              <div className={`p-4 border-b flex items-center justify-between ${isDark ? "bg-gray-800/50 border-gray-800" : "bg-gray-50/50 border-gray-100"}`}>
+                <span className="text-xs font-bold uppercase tracking-wider opacity-60">Search Results</span>
+                <span className="text-xs font-bold text-blue-500">{filteredResults.length} found</span>
               </div>
               <div className="p-2 max-h-[400px] overflow-y-auto scrollbar-hide">
                 {filteredResults.length === 0 ? (
-                  <div className="p-10 text-center">
-                    <p className="text-xs font-black text-gray-500 uppercase tracking-[0.2em]">Zero Data Correlation</p>
+                  <div className="p-8 text-center">
+                    <p className="text-sm text-gray-500">No results found.</p>
                   </div>
                 ) : (
                   filteredResults.map((item, idx) => (
@@ -187,24 +187,21 @@ export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, o
                         setShowSearchResults(false);
                         setSearchQuery('');
                       }}
-                      className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-200 group ${isDark ? "hover:bg-gray-800" : "hover:bg-blue-50/50"}`}
+                      className={`w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 group ${isDark ? "hover:bg-gray-800" : "hover:bg-gray-50"}`}
                     >
-                      <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 ${isDark ? "bg-gray-800 text-blue-400 group-hover:bg-blue-500/10" : "bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white"}`}>
-                          <item.icon size={20} stroke={2.5} />
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${isDark ? "bg-gray-800 text-blue-400 group-hover:bg-blue-500/10" : "bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white"}`}>
+                          <item.icon size={18} stroke={2} />
                         </div>
                         <div className="text-left">
-                          <p className={`text-xs font-black uppercase tracking-tight ${isDark ? "text-gray-100" : "text-gray-900"}`}>{item.name}</p>
-                          <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">{item.category}</p>
+                          <p className={`text-sm font-medium ${isDark ? "text-gray-100" : "text-gray-900"}`}>{item.name}</p>
+                          <p className="text-xs text-gray-500">{item.category}</p>
                         </div>
                       </div>
                       <IconArrowRight size={16} className="text-gray-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
                     </button>
                   ))
                 )}
-              </div>
-              <div className="p-3 bg-gray-50/50 text-center">
-                <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.3em]">Eleckyo Intelligence Link</p>
               </div>
             </div>
           )}
@@ -213,36 +210,36 @@ export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, o
 
       <div className="flex items-center gap-3 md:gap-4">
         {/* Theme Toggle */}
-        <button onClick={toggleTheme} className={`p-2.5 rounded-xl transition-all duration-300 ${isDark ? "hover:bg-gray-800 text-gray-400 hover:text-yellow-400" : "hover:bg-gray-50 text-gray-500 hover:text-blue-600"}`}>
+        <button onClick={toggleTheme} className={`p-2 rounded-lg transition-all duration-200 ${isDark ? "hover:bg-gray-800 text-gray-400 hover:text-white" : "hover:bg-gray-100 text-gray-500 hover:text-gray-900"}`}>
           {isDark ? <IconSun size={20} /> : <IconMoon size={20} />}
         </button>
 
         {/* Notifications */}
         <div className="relative">
-          <button onClick={() => setShowNotifications(!showNotifications)} className={`p-2.5 rounded-xl transition-all duration-300 relative ${isDark ? "hover:bg-gray-800 text-gray-400 hover:text-white" : "hover:bg-gray-50 text-gray-500 hover:text-gray-900"}`}>
+          <button onClick={() => setShowNotifications(!showNotifications)} className={`p-2 rounded-lg transition-all duration-200 relative ${isDark ? "hover:bg-gray-800 text-gray-400 hover:text-white" : "hover:bg-gray-100 text-gray-500 hover:text-gray-900"}`}>
             <IconBellRinging size={20} />
-            {unreadCount > 0 && <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-blue-500 rounded-full border-2 border-inherit shadow-[0_0_10px_rgba(59,130,246,0.5)]"></span>}
+            {unreadCount > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-inherit"></span>}
           </button>
 
           {showNotifications && (
-            <div className={`absolute right-0 mt-4 w-96 rounded-[32px] shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-300 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-white/50 backdrop-blur-xl"}`}>
-              <div className={`p-5 flex items-center justify-between border-b ${isDark ? "border-gray-800" : "border-gray-50"}`}>
+            <div className={`absolute right-0 mt-4 w-80 rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100"}`}>
+              <div className={`p-4 flex items-center justify-between border-b ${isDark ? "border-gray-800" : "border-gray-100"}`}>
                 <div className="flex items-center gap-2">
-                  <h3 className={`text-sm font-black uppercase tracking-widest ${isDark ? "text-white" : "text-gray-900"}`}>Notifications</h3>
-                  {unreadCount > 0 && <span className="px-2 py-0.5 rounded-md bg-blue-500 text-white text-[9px] font-black uppercase tracking-tighter">{unreadCount} New</span>}
+                  <h3 className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Notifications</h3>
+                  {unreadCount > 0 && <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-600 text-xs font-bold">{unreadCount}</span>}
                 </div>
-                <button onClick={handleClearAll} className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-red-500 transition-colors">Wipe Intel</button>
+                <button onClick={handleClearAll} className="text-xs font-medium text-gray-500 hover:text-red-500 transition-colors">Clear All</button>
               </div>
-              <div className="max-h-[400px] overflow-y-auto scrollbar-hide">
+              <div className="max-h-[350px] overflow-y-auto scrollbar-hide">
                 {loading ? (
-                  <div className="p-10 text-center"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div></div>
+                  <div className="p-8 text-center"><div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div></div>
                 ) : notifications.length === 0 ? (
-                  <div className="p-10 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest italic">Encrypted Inbox Empty</div>
+                  <div className="p-8 text-center text-sm text-gray-500">No new notifications</div>
                 ) : (
                   notifications.map((notif) => (
-                    <div key={notif._id} onClick={() => handleMarkAsRead(notif._id)} className={`p-5 group cursor-pointer transition-all duration-200 border-l-4 ${notif.unread ? "border-blue-500 bg-blue-500/5 shadow-inner" : "border-transparent"} ${isDark ? "hover:bg-gray-800/50" : "hover:bg-gray-50"}`}>
-                      <p className={`text-[13px] font-bold ${isDark ? "text-gray-200" : "text-gray-800"}`}>{notif.message}</p>
-                      <p className={`text-[10px] font-black uppercase tracking-widest mt-1.5 ${isDark ? "text-gray-600" : "text-gray-400"}`}>{formatTime(notif.time || notif.createdAt)}</p>
+                    <div key={notif._id} onClick={() => handleMarkAsRead(notif._id)} className={`p-4 cursor-pointer transition-all duration-200 border-b last:border-0 ${notif.unread ? (isDark ? "bg-gray-800/50" : "bg-blue-50/50") : ""} ${isDark ? "border-gray-800 hover:bg-gray-800" : "border-gray-50 hover:bg-gray-50"}`}>
+                      <p className={`text-sm ${isDark ? "text-gray-200" : "text-gray-800"}`}>{notif.message}</p>
+                      <p className={`text-xs mt-1 ${isDark ? "text-gray-500" : "text-gray-400"}`}>{formatTime(notif.time || notif.createdAt)}</p>
                     </div>
                   ))
                 )}
@@ -253,45 +250,33 @@ export default function Nav({ isDark, toggleTheme, toggleSidebar, sidebarOpen, o
 
         {/* Profile */}
         <div className="relative ml-2">
-          <button onClick={() => setShowProfile(!showProfile)} className={`flex items-center gap-3 pl-2 pr-3 py-1.5 rounded-2xl transition-all duration-300 ${isDark ? "hover:bg-gray-800" : "hover:bg-gray-50 border border-transparent"}`}>
-            <div className="relative">
-              <div className="w-10 h-10 rounded-xl overflow-hidden bg-linear-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white text-sm font-black shadow-lg">
-                {adminInitials}
-              </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-gray-950"></div>
+          <button onClick={() => setShowProfile(!showProfile)} className={`flex items-center gap-3 pl-2 pr-3 py-1.5 rounded-xl transition-all duration-200 ${isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"}`}>
+            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+              {adminInitials}
             </div>
-            <div className="hidden lg:flex flex-col items-start">
-              <span className={`text-xs font-black uppercase tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>{adminName}</span>
-              <span className={`text-[10px] font-bold text-blue-500 uppercase tracking-tighter`}>{adminUser.role || 'Superuser'}</span>
+            <div className="hidden lg:flex flex-col items-start leading-none">
+              <span className={`text-sm font-medium ${isDark ? "text-gray-200" : "text-gray-700"}`}>{adminName}</span>
             </div>
-            <IconChevronDown size={14} className={`transition-transform duration-300 ${showProfile ? "rotate-180" : ""} text-gray-400`} />
+            <IconChevronDown size={14} className={`transition-transform duration-200 ${showProfile ? "rotate-180" : ""} text-gray-400`} />
           </button>
 
           {showProfile && (
-            <div className={`absolute right-0 mt-4 w-64 rounded-[32px] shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-300 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-white/50 backdrop-blur-xl"}`}>
-              <div className={`p-6 border-b ${isDark ? "border-gray-800" : "border-gray-100"}`}>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Command Identity</p>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-linear-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-lg font-black shadow-xl">
-                    {adminInitials}
-                  </div>
-                  <div>
-                    <p className={`text-sm font-black ${isDark ? "text-white" : "text-gray-900"}`}>{adminName}</p>
-                    <p className="text-[10px] font-bold text-gray-500">{adminUser.role || 'Head of Logistics'}</p>
-                  </div>
-                </div>
+            <div className={`absolute right-0 mt-2 w-56 rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100"}`}>
+              <div className={`p-4 border-b ${isDark ? "border-gray-800" : "border-gray-100"}`}>
+                <p className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{adminName}</p>
+                <p className="text-xs text-gray-500 mt-1">{adminUser.role || 'Admin Account'}</p>
               </div>
-              <div className="p-2">
-                <button onClick={() => { onNavigate('profile'); setShowProfile(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-600 hover:bg-blue-50 hover:text-blue-600"}`}>
-                  <IconUser size={18} /> Identity Module
+              <div className="p-1">
+                <button onClick={() => { onNavigate('profile'); setShowProfile(false); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${isDark ? "text-gray-300 hover:bg-gray-800" : "text-gray-600 hover:bg-gray-50"}`}>
+                  <IconUser size={16} /> My Profile
                 </button>
-                <button onClick={() => { onNavigate('settings'); setShowProfile(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${isDark ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-600 hover:bg-blue-50 hover:text-blue-600"}`}>
-                  <IconSettings size={18} /> System Core
+                <button onClick={() => { onNavigate('settings'); setShowProfile(false); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${isDark ? "text-gray-300 hover:bg-gray-800" : "text-gray-600 hover:bg-gray-50"}`}>
+                  <IconSettings size={16} /> Settings
                 </button>
               </div>
-              <div className={`p-2 border-t mt-2 ${isDark ? "border-gray-800" : "border-gray-100"}`}>
-                <button onClick={() => window.location.href = "/"} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all text-red-500 hover:bg-red-500/10">
-                  <IconLogout size={18} /> Detach Uplink
+              <div className={`p-1 border-t ${isDark ? "border-gray-800" : "border-gray-100"}`}>
+                <button onClick={() => window.location.href = "/"} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50">
+                  <IconLogout size={16} /> Log Out
                 </button>
               </div>
             </div>
