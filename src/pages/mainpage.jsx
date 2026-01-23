@@ -11,6 +11,7 @@ import Profile from "./profile";
 import Settings from "./settings";
 import Orders from "./orders";
 import Variants from "./variants";
+import Users from "./users";
 
 
 import { useNavigate } from "react-router-dom";
@@ -86,6 +87,8 @@ export default function Mainpage() {
         return <Settings isDark={isDark} />;
       case "variants":
         return <Variants isDark={isDark} />;
+      case "users":
+        return <Users isDark={isDark} />;
       default:
 
         return <Dashboard isDark={isDark} onNavigate={handleNavigate} />;
