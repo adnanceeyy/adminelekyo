@@ -140,6 +140,8 @@ export default function EditProducts({ isDark }) {
         };
         reader.readAsDataURL(file);
       });
+      // Reset input value so same file can be chose again
+      e.target.value = '';
     }
   };
 

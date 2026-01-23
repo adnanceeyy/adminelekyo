@@ -96,6 +96,9 @@ export default function NewProducts({ isDark }) {
         };
         reader.readAsDataURL(file);
       });
+      // CRITICAL: Reset the input value so the same file can be selected again
+      // Without this, selecting the same image for a second product won't trigger onChange
+      e.target.value = '';
     }
   };
 
