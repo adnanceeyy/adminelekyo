@@ -2,7 +2,11 @@
 const API_CONFIG = {
   // Change this to your deployed backend URL or keep localhost for development
   // Ensure BASE_URL ends with a slash for correct axios relative path merging
-  BASE_URL: (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/?$/, '/'),
+  BASE_URL: (() => {
+    const url = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/?$/, '/');
+    console.log('🔌 API_CONFIG: Connected to:', url);
+    return url;
+  })(),
   
   // Helper to get full URL for images/assets
   getAssetUrl: (path) => {
