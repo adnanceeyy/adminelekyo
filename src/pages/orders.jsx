@@ -254,12 +254,27 @@ export default function Orders({ isDark, onNavigate }) {
                                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 px-1">Order Items</h4>
                                 <div className="space-y-3">
                                     {selectedOrder.orderedItems?.map((item, idx) => (
-                                        <div key={idx} className={`flex items-center gap-4 p-4 rounded-2xl border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
-                                            <div className="flex-1">
-                                                <p className={`text-sm font-bold uppercase ${isDark ? "text-gray-200" : "text-gray-900"}`}>{item.itemName}</p>
-                                                <p className="text-xs font-medium text-gray-500 mt-1">₹{item.unitPrice?.toLocaleString()} × {item.quantity}</p>
+                                        <div key={idx} className={`flex items-center gap-5 p-4 rounded-2xl border ${isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100 shadow-sm"}`}>
+                                            <div className={`w-14 h-14 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0 ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
+                                                {item.image ? (
+                                                    <img
+                                                        src={API_CONFIG.getAssetUrl(item.image)}
+                                                        alt={item.itemName}
+                                                        className="w-full h-full object-contain"
+                                                        onError={(e) => {
+                                                            e.target.onerror = null;
+                                                            e.target.src = 'https://placehold.co/100x100?text=No+Img';
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <IconPackage size={24} className="text-gray-400 opacity-20" />
+                                                )}
                                             </div>
-                                            <p className={`text-sm font-bold text-blue-600`}>₹{item.totalPrice?.toLocaleString()}</p>
+                                            <div className="flex-1 min-w-0">
+                                                <p className={`text-sm font-black uppercase tracking-tight truncate ${isDark ? "text-gray-200" : "text-gray-900"}`}>{item.itemName}</p>
+                                                <p className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">₹{item.unitPrice?.toLocaleString()} × {item.quantity}</p>
+                                            </div>
+                                            <p className={`text-sm font-black text-blue-600 tabular-nums`}>₹{item.totalPrice?.toLocaleString()}</p>
                                         </div>
                                     ))}
                                 </div>
