@@ -16,11 +16,13 @@ import {
     IconPackage,
     IconCreditCard,
     IconUser,
-    IconId
+    IconId,
+    IconPrinter
 } from '@tabler/icons-react';
 import React, { useState, useEffect } from 'react';
 import OrderService from '../services/order.service';
 import API_CONFIG from '../config/api.config';
+import InvoiceModal from '../components/InvoiceModal';
 
 export default function Orders({ isDark, onNavigate }) {
     const [searchTerm, setSearchTerm] = useState('');
@@ -29,6 +31,7 @@ export default function Orders({ isDark, onNavigate }) {
     const [error, setError] = useState(null);
     const [activeFilter, setActiveFilter] = useState('All Orders');
     const [selectedOrder, setSelectedOrder] = useState(null);
+    const [printingOrder, setPrintingOrder] = useState(null);
 
     useEffect(() => {
         fetchOrders();
@@ -195,8 +198,16 @@ export default function Orders({ isDark, onNavigate }) {
                                                     <button
                                                         onClick={() => setSelectedOrder(order)}
                                                         className={`p-2 rounded-xl transition-all ${isDark ? "bg-gray-800 text-gray-400 hover:text-white" : "bg-white text-gray-400 hover:text-blue-600 border border-gray-100 shadow-sm"}`}
+                                                        title="View Details"
                                                     >
                                                         <IconEye size={18} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setPrintingOrder(order)}
+                                                        className={`p-2 rounded-xl transition-all ${isDark ? "bg-gray-800 text-gray-400 hover:text-white" : "bg-white text-gray-400 hover:text-emerald-600 border border-gray-100 shadow-sm"}`}
+                                                        title="Print Invoice"
+                                                    >
+                                                        <IconPrinter size={18} />
                                                     </button>
                                                     <select
                                                         className={`text-xs font-bold py-2 px-3 rounded-xl border focus:outline-none uppercase tracking-wider ${isDark ? "bg-gray-800 border-gray-700 text-gray-300" : "bg-white border-gray-200 text-gray-700 shadow-sm"}`}
@@ -258,11 +269,29 @@ export default function Orders({ isDark, onNavigate }) {
                                 <p className={`text-2xl font-bold ${isDark ? "text-white" : "text-blue-600"}`}>₹{(selectedOrder.paymentSummary?.total || selectedOrder.totalAmount || 0).toLocaleString()}</p>
                             </div>
                         </div>
-                        <div className={`px-6 py-4 flex justify-end ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
+                        <div className={`px-6 py-4 flex justify-end gap-3 ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
+                            <button
+                                onClick={() => {
+                                    const orderToPrint = selectedOrder;
+                                    setSelectedOrder(null);
+                                    setPrintingOrder(orderToPrint);
+                                }}
+                                className="px-6 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all flex items-center gap-2"
+                            >
+                                <IconPrinter size={16} /> Print Invoice
+                            </button>
                             <button onClick={() => setSelectedOrder(null)} className="px-6 py-2 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all">Close</button>
                         </div>
                     </div>
                 </div>
+            )}
+
+            {printingOrder && (
+                <InvoiceModal
+                    order={printingOrder}
+                    onClose={() => setPrintingOrder(null)}
+                    isDark={isDark}
+                />
             )}
 
             <style>{`
