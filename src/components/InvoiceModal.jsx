@@ -6,55 +6,75 @@ const InvoiceModal = ({ order, onClose, isDark }) => {
     const [printSize, setPrintSize] = useState("80mm"); // Default to 80mm
 
     const handlePrint = () => {
-        const isThermal = printSize === "80mm" || printSize === "58mm";
+        const isThermal = ["80mm", "58mm"].includes(printSize);
         const thermalWidth = printSize === "58mm" ? "58mm" : "80mm";
         const isA5 = printSize === "A5";
         const isLetter = printSize === "Letter";
         const printContent = printRef.current.innerHTML;
 
         const printWindow = window.open('', '', 'height=800,width=800');
-        printWindow.document.write('<html><head><title>Invoice</title>');
-        printWindow.document.write('<script src="https://cdn.tailwindcss.com"></script>');
-        printWindow.document.write(`
-         <style>
-            @page { 
-               size: ${isThermal ? `${thermalWidth} auto` : isA5 ? 'A5 landscape' : isLetter ? 'letter' : 'A4'}; 
-               margin: 0; 
-            }
-            body { 
-               margin: 0; 
-               padding: ${isThermal ? '0' : '20px'}; 
-               font-family: sans-serif; 
-            }
-            @media print {
-               .no-print { display: none; }
-               ${isThermal ? `
-                  body { width: ${thermalWidth}; }
-                  .thermal-container { 
-                     width: ${thermalWidth}; 
-                     padding: ${printSize === "58mm" ? '2mm' : '5mm'};
-                     box-sizing: border-box;
-                  }
-               ` : isA5 ? `
-                  body { width: 210mm; }
-                  .a5-container {
-                     width: 210mm;
-                  }
-               ` : ''}
-            }
-         </style>
-      `);
-        printWindow.document.write('</head><body>');
-        printWindow.document.write(`<div class="${isThermal ? 'thermal-container' : isA5 ? 'a5-container' : ''}">`);
-        printWindow.document.write(printContent);
-        printWindow.document.write('</div>');
-        printWindow.document.write('</body></html>');
-        printWindow.document.close();
 
-        setTimeout(() => {
-            printWindow.print();
-            printWindow.close();
-        }, 1000);
+        if (!printWindow) {
+            alert('Please allow pop-ups to print the invoice.');
+            return;
+        }
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <title>Invoice - ${order._id || 'Print'}</title>
+                    <script src="https://cdn.tailwindcss.com"></script>
+                    <style>
+                        @page { 
+                            size: ${isThermal ? `${thermalWidth} auto` : isA5 ? 'A5 landscape' : isLetter ? 'letter' : 'A4'}; 
+                            margin: 0; 
+                        }
+                        body { 
+                            margin: 0; 
+                            padding: ${isThermal ? '0' : '20px'}; 
+                            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                            -webkit-print-color-adjust: exact; 
+                            print-color-adjust: exact;
+                            background: white; 
+                        }
+                        @media print {
+                            .no-print { display: none; }
+                            ${isThermal ? `
+                                body { width: ${thermalWidth}; }
+                                .thermal-container { 
+                                    width: ${thermalWidth}; 
+                                    padding: ${printSize === "58mm" ? '2mm' : '5mm'};
+                                    box-sizing: border-box;
+                                }
+                            ` : isA5 ? `
+                                body { width: 210mm; }
+                                .a5-container {
+                                    width: 210mm;
+                                }
+                            ` : ''}
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="${isThermal ? 'thermal-container' : isA5 ? 'a5-container' : ''}">
+                        ${printContent}
+                    </div>
+                    <script>
+                        window.onload = function() {
+                            // Small delay to ensure Tailwind has applied styles
+                            setTimeout(function() {
+                                window.print();
+                                window.close();
+                            }, 1000);
+                        };
+                    </script>
+                </body>
+            </html>
+        `;
+
+        printWindow.document.write(html);
+        printWindow.document.close();
     };
 
     if (!order) return null;
@@ -176,7 +196,7 @@ const InvoiceModal = ({ order, onClose, isDark }) => {
     );
 
     const ThermalLayout = () => (
-        <div className="p-4 bg-white text-black font-mono text-[10px] leading-tight" style={{ width: '80mm', margin: '0 auto' }}>
+        <div className="p-4 bg-white text-black font-mono text-[10px] leading-tight w-full">
             <div className="text-center border-b border-dashed border-black pb-4 mb-4">
                 <h1 className="text-xl font-bold tracking-tighter">ELECKYO</h1>
                 <p className="font-bold">PREMIUM ELECTRONICS</p>
@@ -236,6 +256,8 @@ const InvoiceModal = ({ order, onClose, isDark }) => {
         </div>
     );
 
+    const isThermal = ["80mm", "58mm"].includes(printSize);
+
     return (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
@@ -268,8 +290,11 @@ const InvoiceModal = ({ order, onClose, isDark }) => {
                 </div>
 
                 <div className={`overflow-y-auto p-8 custom-scrollbar flex justify-center ${isDark ? "bg-gray-950/50" : "bg-gray-100/30"}`}>
-                    <div className={`shadow-2xl overflow-hidden ${printSize === "80mm" ? "w-[80mm]" : "w-full max-w-[210mm]"}`} ref={printRef}>
-                        {printSize === "80mm" ? <ThermalLayout /> : <StandardLayout />}
+                    <div
+                        className={`shadow-2xl overflow-hidden bg-white ${isThermal ? (printSize === "58mm" ? "w-[58mm]" : "w-[80mm]") : "w-full max-w-[210mm]"}`}
+                        ref={printRef}
+                    >
+                        {isThermal ? <ThermalLayout /> : <StandardLayout />}
                     </div>
                 </div>
 
