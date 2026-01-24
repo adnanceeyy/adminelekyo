@@ -24,49 +24,68 @@ const InvoiceModal = ({ order, onClose, isDark }) => {
             <html>
                 <head>
                     <title>Invoice - ${order._id || 'Print'}</title>
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <script src="https://cdn.tailwindcss.com"></script>
                     <style>
+                        /* Base Print Settings */
                         @page { 
-                            size: ${isThermal ? `${thermalWidth} auto` : isA5 ? 'A5 landscape' : isLetter ? 'letter' : 'A4'}; 
-                            margin: 0; 
+                            margin: 0;
+                            size: ${isThermal ? `${thermalWidth} auto` : isA5 ? 'A5 landscape' : isLetter ? 'letter' : 'A4'};
                         }
+                        
                         body { 
                             margin: 0; 
-                            padding: ${isThermal ? '0' : '20px'}; 
+                            padding: 0; 
                             font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                            background: white; 
                             -webkit-print-color-adjust: exact; 
                             print-color-adjust: exact;
-                            background: white; 
                         }
+
+                        /* Thermal Specifics */
+                        ${isThermal ? `
+                            body { 
+                                width: 100%; 
+                                max-width: ${thermalWidth};
+                            }
+                            .thermal-container {
+                                width: 100%;
+                                padding: ${printSize === "58mm" ? '2mm' : '4mm'};
+                                box-sizing: border-box;
+                            }
+                            .thermal-text {
+                                font-family: 'Courier New', Courier, monospace;
+                                color: black;
+                            }
+                        ` : `
+                            body {
+                                padding: 20px;
+                            }
+                            /* Force A4/Standard width if needed, essentially 100% of page */
+                            .a5-container, .standard-container {
+                                width: 100%;
+                            }
+                        `}
+
                         @media print {
                             .no-print { display: none; }
-                            ${isThermal ? `
-                                body { width: ${thermalWidth}; }
-                                .thermal-container { 
-                                    width: ${thermalWidth}; 
-                                    padding: ${printSize === "58mm" ? '2mm' : '5mm'};
-                                    box-sizing: border-box;
-                                }
-                            ` : isA5 ? `
-                                body { width: 210mm; }
-                                .a5-container {
-                                    width: 210mm;
-                                }
-                            ` : ''}
+                            body { -webkit-print-color-adjust: exact; }
                         }
                     </style>
                 </head>
                 <body>
-                    <div class="${isThermal ? 'thermal-container' : isA5 ? 'a5-container' : ''}">
+                    <div class="${isThermal ? 'thermal-container' : isA5 ? 'a5-container' : 'standard-container'}">
                         ${printContent}
                     </div>
                     <script>
                         window.onload = function() {
-                            // Small delay to ensure Tailwind has applied styles
+                            // Ensure styles are effectively applied
                             setTimeout(function() {
+                                window.focus();
                                 window.print();
-                                window.close();
-                            }, 1000);
+                                // Optional: simple auto-close logic if needed
+                                // window.close();
+                            }, 800);
                         };
                     </script>
                 </body>
