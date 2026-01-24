@@ -245,9 +245,30 @@ export default function Orders({ isDark, onNavigate }) {
                             <div className={`rounded-2xl p-5 ${isDark ? "bg-gray-950/50" : "bg-gray-50"}`}>
                                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Customer Information</h4>
                                 <div className="space-y-3">
-                                    <p className={`text-sm font-bold flex items-center gap-3 ${isDark ? "text-gray-200" : "text-gray-800"}`}><IconUser size={16} className="text-blue-500" /> {selectedOrder.customerDetails?.name}</p>
-                                    <p className={`text-sm font-medium flex items-center gap-3 text-gray-500`}><IconMail size={16} /> {selectedOrder.customerDetails?.email}</p>
-                                    <p className={`text-sm font-medium flex items-start gap-3 text-gray-500`}><IconMapPin size={16} className="mt-0.5 shrink-0" /> <span>{selectedOrder.customerDetails?.address?.street}, {selectedOrder.customerDetails?.address?.city}</span></p>
+                                    <p className={`text-sm font-bold flex items-center gap-3 ${isDark ? "text-gray-200" : "text-gray-800"}`}>
+                                        <IconUser size={16} className="text-blue-500" />
+                                        {selectedOrder.customerDetails?.name}
+                                    </p>
+                                    <p className={`text-sm font-medium flex items-center gap-3 text-gray-500`}>
+                                        <IconMail size={16} />
+                                        {selectedOrder.customerDetails?.email}
+                                    </p>
+                                    {selectedOrder.customerDetails?.phone && (
+                                        <p className={`text-sm font-medium flex items-center gap-3 text-gray-500`}>
+                                            <IconPhone size={16} />
+                                            {selectedOrder.customerDetails?.phone}
+                                        </p>
+                                    )}
+                                    <p className={`text-sm font-medium flex items-start gap-3 text-gray-500`}>
+                                        <IconMapPin size={16} className="mt-0.5 shrink-0" />
+                                        <div className="flex flex-col">
+                                            <span>{selectedOrder.customerDetails?.address?.street}</span>
+                                            <span>
+                                                {selectedOrder.customerDetails?.address?.city}, {selectedOrder.customerDetails?.address?.postalCode}
+                                            </span>
+                                            <span>{selectedOrder.customerDetails?.address?.country}</span>
+                                        </div>
+                                    </p>
                                 </div>
                             </div>
                             <div>

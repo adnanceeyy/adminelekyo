@@ -132,9 +132,9 @@ export default function Users({ isDark }) {
               <thead>
                 <tr className={`${isDark ? "bg-gray-950/40 text-gray-500" : "bg-gray-50/50 text-gray-500"} text-xs font-bold uppercase tracking-wider`}>
                   <th className="px-6 py-5">User</th>
+                  <th className="px-6 py-5">Contact</th>
+                  <th className="px-6 py-5">Address</th>
                   <th className="px-6 py-5">Role</th>
-                  <th className="px-6 py-5">Location</th>
-                  <th className="px-6 py-5">Status</th>
                   <th className="px-6 py-5">Joined</th>
                   <th className="px-6 py-5 text-center">Action</th>
                 </tr>
@@ -168,12 +168,21 @@ export default function Users({ isDark }) {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`text-sm font-bold capitalize ${isDark ? "text-gray-400" : "text-gray-700"}`}>{user.role || 'user'}</span>
+                        <div className="flex items-center gap-2">
+                          {user.phone ? (
+                            <>
+                              <IconPhone size={16} className="text-gray-400" />
+                              <span className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>{user.phone}</span>
+                            </>
+                          ) : (
+                            <span className="text-xs text-gray-400 font-medium italic">No Phone</span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <IconMapPin size={16} className="text-gray-400" />
-                          <span className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>{user.address || 'Not set'}</span>
+                          <IconMapPin size={16} className="text-gray-400 flex-shrink-0" />
+                          <span className={`text-sm font-medium truncate max-w-[200px] ${isDark ? "text-gray-400" : "text-gray-600"}`} title={user.address}>{user.address || 'Not set'}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -182,7 +191,7 @@ export default function Users({ isDark }) {
                           : (isDark ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-600')
                           }`}>
                           <div className={`w-1.5 h-1.5 rounded-full ${user.role === 'admin' ? 'bg-emerald-500' : 'bg-blue-500'}`}></div>
-                          {user.role === 'admin' ? 'Admin' : 'Active'}
+                          {user.role === 'admin' ? 'Admin' : 'Customer'}
                         </span>
                       </td>
                       <td className="px-6 py-4">
